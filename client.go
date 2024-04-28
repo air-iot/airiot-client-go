@@ -9,6 +9,7 @@ import (
 	"github.com/air-iot/api-client-go/v4/auth"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/core"
+	"github.com/air-iot/api-client-go/v4/datarelay"
 	"github.com/air-iot/api-client-go/v4/dataservice"
 	"github.com/air-iot/api-client-go/v4/driver"
 	"github.com/air-iot/api-client-go/v4/engine"
@@ -39,6 +40,7 @@ type Client struct {
 	ReportClient      *report.Client
 	LiveClient        *live.Client
 	AlgorithmClient   *algorithm.Client
+	DataRelayClient   *datarelay.Client
 }
 
 func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error) {
@@ -134,6 +136,10 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
+	dataRelayClient, cleanDataRelay, err := datarelay.NewClient(cfg, r, cred, httpCred)
+	if err != nil {
+		return nil, nil, err
+	}
 	return &Client{
 			AuthClient:        authCli,
 			SpmClient:         spmClient,
@@ -146,6 +152,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			ReportClient:      reportClient,
 			LiveClient:        liveClient,
 			AlgorithmClient:   algorithmClient,
+			DataRelayClient:   dataRelayClient,
 		}, func() {
 			cleanSpm()
 			cleanCore()
@@ -157,5 +164,6 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			cleanReport()
 			cleanLive()
 			cleanAlgorithm()
+			cleanDataRelay()
 		}, nil
 }

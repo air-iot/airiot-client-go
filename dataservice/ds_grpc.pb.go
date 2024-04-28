@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.1
-// source: dataService/ds.proto
+// source: dataService/data_relay.proto
 
 package dataservice
 
@@ -354,7 +354,7 @@ var DataGroupService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "dataService/ds.proto",
+	Metadata: "dataService/data_relay.proto",
 }
 
 // DataInterfaceServiceClient is the client API for DataInterfaceService service.
@@ -692,7 +692,7 @@ var DataInterfaceService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "dataService/ds.proto",
+	Metadata: "dataService/data_relay.proto",
 }
 
 // DataServiceClient is the client API for DataService service.
@@ -778,7 +778,7 @@ var DataService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "dataService/ds.proto",
+	Metadata: "dataService/data_relay.proto",
 }
 
 // DatasetViewServiceClient is the client API for DatasetViewService service.
@@ -864,5 +864,5 @@ var DatasetViewService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "dataService/ds.proto",
+	Metadata: "dataService/data_relay.proto",
 }
