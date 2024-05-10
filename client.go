@@ -29,6 +29,7 @@ import (
 )
 
 type Client struct {
+	RegistryClient    *KratosRegistryClient
 	AuthClient        *auth.Client
 	SpmClient         *spm.Client
 	CoreClient        *core.Client
@@ -141,6 +142,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 		return nil, nil, err
 	}
 	return &Client{
+			RegistryClient:    NewKartosRegistryClient(cli),
 			AuthClient:        authCli,
 			SpmClient:         spmClient,
 			CoreClient:        coreClient,
