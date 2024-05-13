@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	Gateway    string             `json:"gateway"`
 	EtcdConfig string             `json:"etcdConfig"`
 	Metadata   map[string]string  `json:"metadata"`
 	Services   map[string]Service `json:"services"`
