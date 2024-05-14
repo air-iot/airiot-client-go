@@ -42,10 +42,15 @@ service DataService {
   rpc Proxy (Request) returns (ProxyResponse) {}
 }
 
-service DatasetViewService {
+service DatasetService {
+  rpc Query (api.QueryRequest) returns (api.Response) {}
   rpc Preview (ViewPreviewReq) returns (api.Response) {}
 }
 
+service DatasetViewService {
+  rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc Preview (ViewPreviewReq) returns (api.Response) {}
+}
 message Request {
   string key = 1;
   bytes data = 2;
