@@ -611,6 +611,7 @@ type UserServiceClient interface {
 	Replace(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
 	Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
 	GetCurrentUserInfo(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*api.Response, error)
+	UserPermissionUpdate(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
 	QueryBackup(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
 	DeleteManyBackup(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
 	CreateManyBackup(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
@@ -687,6 +688,15 @@ func (c *userServiceClient) GetCurrentUserInfo(ctx context.Context, in *LoginUse
 	return out, nil
 }
 
+func (c *userServiceClient) UserPermissionUpdate(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, "/core.UserService/UserPermissionUpdate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) QueryBackup(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
 	out := new(api.Response)
 	err := c.cc.Invoke(ctx, "/core.UserService/QueryBackup", in, out, opts...)
@@ -725,6 +735,7 @@ type UserServiceServer interface {
 	Replace(context.Context, *api.UpdateRequest) (*api.Response, error)
 	Create(context.Context, *api.CreateRequest) (*api.Response, error)
 	GetCurrentUserInfo(context.Context, *LoginUserRequest) (*api.Response, error)
+	UserPermissionUpdate(context.Context, *api.CreateRequest) (*api.Response, error)
 	QueryBackup(context.Context, *api.QueryRequest) (*api.Response, error)
 	DeleteManyBackup(context.Context, *api.QueryRequest) (*api.Response, error)
 	CreateManyBackup(context.Context, *api.CreateRequest) (*api.Response, error)
@@ -755,6 +766,9 @@ func (UnimplementedUserServiceServer) Create(context.Context, *api.CreateRequest
 }
 func (UnimplementedUserServiceServer) GetCurrentUserInfo(context.Context, *LoginUserRequest) (*api.Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentUserInfo not implemented")
+}
+func (UnimplementedUserServiceServer) UserPermissionUpdate(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserPermissionUpdate not implemented")
 }
 func (UnimplementedUserServiceServer) QueryBackup(context.Context, *api.QueryRequest) (*api.Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryBackup not implemented")
@@ -904,6 +918,24 @@ func _UserService_GetCurrentUserInfo_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UserPermissionUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UserPermissionUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.UserService/UserPermissionUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UserPermissionUpdate(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_QueryBackup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.QueryRequest)
 	if err := dec(in); err != nil {
@@ -992,6 +1024,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCurrentUserInfo",
 			Handler:    _UserService_GetCurrentUserInfo_Handler,
+		},
+		{
+			MethodName: "UserPermissionUpdate",
+			Handler:    _UserService_UserPermissionUpdate_Handler,
 		},
 		{
 			MethodName: "QueryBackup",
