@@ -28,6 +28,7 @@ type Client struct {
 	dataGroupServiceClient     DataGroupServiceClient
 	dataInterfaceServiceClient DataInterfaceServiceClient
 	datasetViewServiceClient   DatasetViewServiceClient
+	datasetServiceClient       DatasetServiceClient
 }
 
 func NewClient(cfg config.Config, registry *etcd.Registry, cred grpc.DialOption, httpCred middleware.Middleware) (*Client, func(), error) {
@@ -73,6 +74,7 @@ func (c *Client) createConn() error {
 	c.dataGroupServiceClient = NewDataGroupServiceClient(cc)
 	c.dataInterfaceServiceClient = NewDataInterfaceServiceClient(cc)
 	c.datasetViewServiceClient = NewDatasetViewServiceClient(cc)
+	c.datasetServiceClient = NewDatasetServiceClient(cc)
 	c.conn = cc
 	return nil
 }
@@ -147,4 +149,16 @@ func (c *Client) GetDatasetViewServiceClient() (DatasetViewServiceClient, error)
 		return nil, errors.NewMsg("客户端是空")
 	}
 	return c.datasetViewServiceClient, nil
+}
+
+func (c *Client) GetDatasetServiceClient() (DatasetServiceClient, error) {
+	if c.conn == nil {
+		if err := c.createConn(); err != nil {
+			return nil, err
+		}
+	}
+	if c.datasetServiceClient == nil {
+		return nil, errors.NewMsg("客户端是空")
+	}
+	return c.datasetServiceClient, nil
 }
