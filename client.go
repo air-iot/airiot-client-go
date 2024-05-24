@@ -14,6 +14,7 @@ import (
 	"github.com/air-iot/api-client-go/v4/driver"
 	"github.com/air-iot/api-client-go/v4/engine"
 	"github.com/air-iot/api-client-go/v4/flow"
+	"github.com/air-iot/api-client-go/v4/jsserver"
 	"github.com/air-iot/api-client-go/v4/live"
 	"github.com/air-iot/api-client-go/v4/report"
 	"github.com/air-iot/api-client-go/v4/spm"
@@ -42,6 +43,7 @@ type Client struct {
 	LiveClient        *live.Client
 	AlgorithmClient   *algorithm.Client
 	DataRelayClient   *datarelay.Client
+	JsServerClient    *jsserver.Client
 }
 
 func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error) {
@@ -141,6 +143,10 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
+	jsServerClient, cleanJsServer, err := jsserver.NewClient(cfg, r, cred, httpCred)
+	if err != nil {
+		return nil, nil, err
+	}
 	return &Client{
 			RegistryClient:    NewKartosRegistryClient(cli),
 			AuthClient:        authCli,
@@ -155,6 +161,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			LiveClient:        liveClient,
 			AlgorithmClient:   algorithmClient,
 			DataRelayClient:   dataRelayClient,
+			JsServerClient:    jsServerClient,
 		}, func() {
 			cleanSpm()
 			cleanCore()
@@ -167,5 +174,6 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			cleanLive()
 			cleanAlgorithm()
 			cleanDataRelay()
+			cleanJsServer()
 		}, nil
 }

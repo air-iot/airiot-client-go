@@ -1,12 +1,12 @@
-// protoc -I ./ --go_out=. ./jsgrpcserver/script.proto
-// protoc -I ./ --go-grpc_out=. jsgrpcserver/script.proto
+// protoc -I ./ --go_out=. ./jsserver/script.proto
+// protoc -I ./ --go-grpc_out=. jsserver/script.proto
 // grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./ --grpc_out=grpc_js:./ ./proto/script.proto
 syntax = "proto3";
 
-package jsgrpcserver;
+package jsserver;
 
-option go_package = "./jsgrpcserver;proto";
-option java_package = "cn.airiot.sdk.client.dubbo.grpc.jsgrpcserver";
+option go_package = "./jsserver;jsserver";
+option java_package = "cn.airiot.sdk.client.dubbo.grpc.jsserver";
 option java_multiple_files = true;
 option java_generate_equals_and_hash = true;
 option java_generic_services = true;
