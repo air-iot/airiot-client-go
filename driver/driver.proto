@@ -47,6 +47,27 @@ service DriverInstanceService {
   rpc Create (api.CreateRequest) returns (api.Response) {}
 }
 
+service DriverEventCronService {
+  rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc Get (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Delete (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Update (api.UpdateRequest) returns (api.Response) {}
+  rpc Replace (api.UpdateRequest) returns (api.Response) {}
+  rpc Create (api.CreateRequest) returns (api.Response) {}
+  rpc CreateMany (api.CreateRequest) returns (api.Response) {}
+  rpc DeleteMany (api.QueryRequest) returns (api.Response) {}
+}
+
+service DriverInstructCronService {
+  rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc Get (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Delete (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Update (api.UpdateRequest) returns (api.Response) {}
+  rpc Replace (api.UpdateRequest) returns (api.Response) {}
+  rpc Create (api.CreateRequest) returns (api.Response) {}
+  rpc CreateMany (api.CreateRequest) returns (api.Response) {}
+  rpc DeleteMany (api.QueryRequest) returns (api.Response) {}
+}
 
 message UpdateRequest {
   string id = 1;

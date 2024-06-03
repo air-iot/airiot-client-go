@@ -4,6 +4,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "api/api.proto";
 
 package engine;
 
@@ -29,6 +30,17 @@ service ExtensionService {
   rpc HealthCheck (ExtensionHealthCheckRequest) returns (ExtensionHealthCheckResponse) {}
   rpc SchemaStream (stream  ExtensionResult) returns (stream ExtensionSchemaRequest) {}
   rpc RunStream (stream  ExtensionResult) returns (stream  ExtensionRunRequest) {}
+}
+
+service FlowJobCronService {
+  rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc Get (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Delete (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Update (api.UpdateRequest) returns (api.Response) {}
+  rpc Replace (api.UpdateRequest) returns (api.Response) {}
+  rpc Create (api.CreateRequest) returns (api.Response) {}
+  rpc CreateMany (api.CreateRequest) returns (api.Response) {}
+  rpc DeleteMany (api.QueryRequest) returns (api.Response) {}
 }
 
 message RunRequest {

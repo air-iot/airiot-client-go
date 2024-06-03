@@ -35,8 +35,9 @@ type Client struct {
 	opts        []grpc.DialOption
 	middlewares []middleware.Middleware
 
-	engineServiceClient EngineServiceClient
-	pluginServiceClient PluginServiceClient
+	engineServiceClient      EngineServiceClient
+	pluginServiceClient      PluginServiceClient
+	flowJobCronServiceClient FlowJobCronServiceClient
 }
 
 func NewClient(cfg config.Config, registry *etcd.Registry, cred grpc.DialOption, httpCred middleware.Middleware) (*Client, func(), error) {
@@ -80,6 +81,7 @@ func (c *Client) createConn() error {
 	}
 	c.engineServiceClient = NewEngineServiceClient(cc)
 	c.pluginServiceClient = NewPluginServiceClient(cc)
+	c.flowJobCronServiceClient = NewFlowJobCronServiceClient(cc)
 	c.conn = cc
 	return nil
 }
@@ -130,4 +132,16 @@ func (c *Client) GetPluginServiceClient() (PluginServiceClient, error) {
 		return nil, errors.NewMsg("客户端是空")
 	}
 	return c.pluginServiceClient, nil
+}
+
+func (c *Client) GetFlowJobCronServiceClient() (FlowJobCronServiceClient, error) {
+	if c.conn == nil {
+		if err := c.createConn(); err != nil {
+			return nil, err
+		}
+	}
+	if c.flowJobCronServiceClient == nil {
+		return nil, errors.NewMsg("客户端是空")
+	}
+	return c.flowJobCronServiceClient, nil
 }
