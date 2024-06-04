@@ -993,3 +993,315 @@ var FlowJobCronService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "engine/engine.proto",
 }
+
+const (
+	FlowLogCronService_Query_FullMethodName      = "/engine.FlowLogCronService/Query"
+	FlowLogCronService_Get_FullMethodName        = "/engine.FlowLogCronService/Get"
+	FlowLogCronService_Delete_FullMethodName     = "/engine.FlowLogCronService/Delete"
+	FlowLogCronService_Update_FullMethodName     = "/engine.FlowLogCronService/Update"
+	FlowLogCronService_Create_FullMethodName     = "/engine.FlowLogCronService/Create"
+	FlowLogCronService_CreateMany_FullMethodName = "/engine.FlowLogCronService/CreateMany"
+	FlowLogCronService_DeleteMany_FullMethodName = "/engine.FlowLogCronService/DeleteMany"
+)
+
+// FlowLogCronServiceClient is the client API for FlowLogCronService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type FlowLogCronServiceClient interface {
+	Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Delete(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	CreateMany(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	DeleteMany(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
+}
+
+type flowLogCronServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewFlowLogCronServiceClient(cc grpc.ClientConnInterface) FlowLogCronServiceClient {
+	return &flowLogCronServiceClient{cc}
+}
+
+func (c *flowLogCronServiceClient) Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_Query_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flowLogCronServiceClient) Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_Get_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flowLogCronServiceClient) Delete(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_Delete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flowLogCronServiceClient) Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_Update_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flowLogCronServiceClient) Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_Create_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flowLogCronServiceClient) CreateMany(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_CreateMany_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flowLogCronServiceClient) DeleteMany(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, FlowLogCronService_DeleteMany_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// FlowLogCronServiceServer is the server API for FlowLogCronService service.
+// All implementations must embed UnimplementedFlowLogCronServiceServer
+// for forward compatibility
+type FlowLogCronServiceServer interface {
+	Query(context.Context, *api.QueryRequest) (*api.Response, error)
+	Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
+	Delete(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
+	Update(context.Context, *api.UpdateRequest) (*api.Response, error)
+	Create(context.Context, *api.CreateRequest) (*api.Response, error)
+	CreateMany(context.Context, *api.CreateRequest) (*api.Response, error)
+	DeleteMany(context.Context, *api.QueryRequest) (*api.Response, error)
+	mustEmbedUnimplementedFlowLogCronServiceServer()
+}
+
+// UnimplementedFlowLogCronServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedFlowLogCronServiceServer struct {
+}
+
+func (UnimplementedFlowLogCronServiceServer) Query(context.Context, *api.QueryRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) Delete(context.Context, *api.GetOrDeleteRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) Update(context.Context, *api.UpdateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) Create(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) CreateMany(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMany not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) DeleteMany(context.Context, *api.QueryRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteMany not implemented")
+}
+func (UnimplementedFlowLogCronServiceServer) mustEmbedUnimplementedFlowLogCronServiceServer() {}
+
+// UnsafeFlowLogCronServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to FlowLogCronServiceServer will
+// result in compilation errors.
+type UnsafeFlowLogCronServiceServer interface {
+	mustEmbedUnimplementedFlowLogCronServiceServer()
+}
+
+func RegisterFlowLogCronServiceServer(s grpc.ServiceRegistrar, srv FlowLogCronServiceServer) {
+	s.RegisterService(&FlowLogCronService_ServiceDesc, srv)
+}
+
+func _FlowLogCronService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).Query(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_Query_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).Query(ctx, req.(*api.QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlowLogCronService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.GetOrDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_Get_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).Get(ctx, req.(*api.GetOrDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlowLogCronService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.GetOrDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_Delete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).Delete(ctx, req.(*api.GetOrDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlowLogCronService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_Update_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).Update(ctx, req.(*api.UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlowLogCronService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_Create_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).Create(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlowLogCronService_CreateMany_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).CreateMany(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_CreateMany_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).CreateMany(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlowLogCronService_DeleteMany_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlowLogCronServiceServer).DeleteMany(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlowLogCronService_DeleteMany_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlowLogCronServiceServer).DeleteMany(ctx, req.(*api.QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// FlowLogCronService_ServiceDesc is the grpc.ServiceDesc for FlowLogCronService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var FlowLogCronService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "engine.FlowLogCronService",
+	HandlerType: (*FlowLogCronServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Query",
+			Handler:    _FlowLogCronService_Query_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _FlowLogCronService_Get_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _FlowLogCronService_Delete_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _FlowLogCronService_Update_Handler,
+		},
+		{
+			MethodName: "Create",
+			Handler:    _FlowLogCronService_Create_Handler,
+		},
+		{
+			MethodName: "CreateMany",
+			Handler:    _FlowLogCronService_CreateMany_Handler,
+		},
+		{
+			MethodName: "DeleteMany",
+			Handler:    _FlowLogCronService_DeleteMany_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "engine/engine.proto",
+}

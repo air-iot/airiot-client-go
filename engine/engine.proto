@@ -43,6 +43,16 @@ service FlowJobCronService {
   rpc DeleteMany (api.QueryRequest) returns (api.Response) {}
 }
 
+service FlowLogCronService {
+  rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc Get (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Delete (api.GetOrDeleteRequest) returns (api.Response) {}
+  rpc Update (api.UpdateRequest) returns (api.Response) {}
+  rpc Create (api.CreateRequest) returns (api.Response) {}
+  rpc CreateMany (api.CreateRequest) returns (api.Response) {}
+  rpc DeleteMany (api.QueryRequest) returns (api.Response) {}
+}
+
 message RunRequest {
   string projectId = 1;
   string config = 2;
