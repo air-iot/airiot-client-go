@@ -44,13 +44,21 @@ service DataService {
 
 service DatasetService {
   rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc QueryWhole (api.QueryRequest) returns (api.Response) {}
+  rpc CreateWhole (api.CreateRequest) returns (api.Response) {}
+  rpc ReplaceWhole (api.UpdateRequest) returns (api.Response) {}
   rpc Preview (ViewPreviewReq) returns (api.Response) {}
+  rpc DeleteAll (api.QueryRequest) returns (api.Response) {}
 }
 
 service DatasetViewService {
   rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc Create (api.CreateRequest) returns (api.Response) {}
+  rpc Replace (api.UpdateRequest) returns (api.Response) {}
   rpc Preview (ViewPreviewReq) returns (api.Response) {}
+  rpc DeleteAll (api.QueryRequest) returns (api.Response) {}
 }
+
 message Request {
   string key = 1;
   bytes data = 2;

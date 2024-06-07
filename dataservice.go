@@ -1,6 +1,7 @@
 package api_client_go
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/air-iot/api-client-go/v4/apicontext"
@@ -511,6 +512,89 @@ func (c *Client) DatasetViewPreview(ctx context.Context, projectId, mode, datese
 	return res.GetResult(), nil
 }
 
+func (c *Client) ReplaceDatasetView(ctx context.Context, projectId, id string, datasetView interface{}) error {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	if datasetView == nil {
+		return errors.NewMsg("更新数据为空")
+	}
+	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
+	if err != nil {
+		return errors.NewMsg("获取客户端错误,%s", err)
+	}
+	bts, err := json.Marshal(datasetView)
+	if err != nil {
+		return errors.NewMsg("marshal 更新数据错误,%s", err)
+	}
+	res, err := cli.Replace(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.UpdateRequest{
+			Id:   id,
+			Data: bts,
+		})
+	if err != nil {
+		return errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	return nil
+}
+
+func (c *Client) CreateDatasetView(ctx context.Context, projectId string, datasetView, result interface{}) error {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	if datasetView == nil {
+		return errors.NewMsg("插入数据为空")
+	}
+	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
+	if err != nil {
+		return errors.NewMsg("获取客户端错误,%s", err)
+	}
+	bts, err := json.Marshal(datasetView)
+	if err != nil {
+		return errors.NewMsg("marshal 插入数据为空")
+	}
+	res, err := cli.Create(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.CreateRequest{
+			Data: bts,
+		})
+	if err != nil {
+		return errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
+	//	return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	//}
+	return nil
+}
+
+// 删除全部数据集视图（仅备份还原使用），有特殊认证
+func (c *Client) DeleteAllDatasetViews(ctx context.Context, projectId string) (int64, error) {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
+	if err != nil {
+		return 0, errors.NewMsg("获取客户端错误,%s", err)
+	}
+	res, err := cli.DeleteAll(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.QueryRequest{})
+	if err != nil {
+		return 0, errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	return res.GetCount(), nil
+}
+
 func (c *Client) QueryDatasetView(ctx context.Context, projectId string, query, result interface{}) (int64, error) {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
@@ -581,6 +665,90 @@ func (c *Client) DatasetPreview(ctx context.Context, projectId, mode, datesetId 
 	return res.GetResult(), nil
 }
 
+func (c *Client) ReplaceDatasetWhole(ctx context.Context, projectId, id string, datasetWhole interface{}) error {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	if datasetWhole == nil {
+		return errors.NewMsg("更新数据为空")
+	}
+	cli, err := c.DataServiceClient.GetDatasetServiceClient()
+	if err != nil {
+		return errors.NewMsg("获取客户端错误,%s", err)
+	}
+	bts, err := json.Marshal(datasetWhole)
+	if err != nil {
+		return errors.NewMsg("marshal 更新数据错误,%s", err)
+	}
+	res, err := cli.ReplaceWhole(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.UpdateRequest{
+			Id:   id,
+			Data: bts,
+		})
+	if err != nil {
+		return errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	return nil
+}
+
+func (c *Client) CreateDatasetWhole(ctx context.Context, projectId string, datasetWhole, result interface{}) error {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	if datasetWhole == nil {
+		return errors.NewMsg("插入数据为空")
+	}
+	cli, err := c.DataServiceClient.GetDatasetServiceClient()
+	if err != nil {
+		return errors.NewMsg("获取客户端错误,%s", err)
+	}
+	bts, err := json.Marshal(datasetWhole)
+	if err != nil {
+		return errors.NewMsg("marshal 插入数据为空")
+	}
+	res, err := cli.CreateWhole(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.CreateRequest{
+			Data: bts,
+		})
+	if err != nil {
+		return errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
+	//	return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	//}
+	return nil
+}
+
+// 删除全部数据集（仅备份还原使用），有特殊认证
+func (c *Client) DeleteAllDatasets(ctx context.Context, projectId string) (int64, error) {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	cli, err := c.DataServiceClient.GetDatasetServiceClient()
+	if err != nil {
+		return 0, errors.NewMsg("获取客户端错误,%s", err)
+	}
+	res, err := cli.DeleteAll(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.QueryRequest{})
+	if err != nil {
+		return 0, errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	return res.GetCount(), nil
+}
+
+// 查询数据集整体配置（仅数据集本身），支持过滤和分页
 func (c *Client) QueryDataset(ctx context.Context, projectId string, query, result interface{}) (int64, error) {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
@@ -603,6 +771,36 @@ func (c *Client) QueryDataset(ctx context.Context, projectId string, query, resu
 		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
+		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	}
+	return res.GetCount(), nil
+}
+
+// 查询数据集整体配置（包含数据集本身及其列配置），支持过滤和分页
+func (c *Client) QueryDatasetWhole(ctx context.Context, projectId string, query, result interface{}) (int64, error) {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	bts, err := json.Marshal(query)
+	if err != nil {
+		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+	}
+	cli, err := c.DataServiceClient.GetDatasetServiceClient()
+	if err != nil {
+		return 0, errors.NewMsg("获取客户端错误,%s", err)
+	}
+	res, err := cli.QueryWhole(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.QueryRequest{Query: bts})
+	if err != nil {
+		return 0, errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+	}
+	d := json.NewDecoder(bytes.NewBuffer(res.GetResult()))
+	d.UseNumber()
+	if err := d.Decode(&result); err != nil {
 		return 0, errors.NewMsg("解析请求结果错误, %s", err)
 	}
 	return res.GetCount(), nil
