@@ -28,6 +28,355 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	LocalAlgorithmService_Query_FullMethodName      = "/algorithm.LocalAlgorithmService/Query"
+	LocalAlgorithmService_Get_FullMethodName        = "/algorithm.LocalAlgorithmService/Get"
+	LocalAlgorithmService_Delete_FullMethodName     = "/algorithm.LocalAlgorithmService/Delete"
+	LocalAlgorithmService_Update_FullMethodName     = "/algorithm.LocalAlgorithmService/Update"
+	LocalAlgorithmService_Replace_FullMethodName    = "/algorithm.LocalAlgorithmService/Replace"
+	LocalAlgorithmService_Create_FullMethodName     = "/algorithm.LocalAlgorithmService/Create"
+	LocalAlgorithmService_CreateMany_FullMethodName = "/algorithm.LocalAlgorithmService/CreateMany"
+	LocalAlgorithmService_DeleteMany_FullMethodName = "/algorithm.LocalAlgorithmService/DeleteMany"
+)
+
+// LocalAlgorithmServiceClient is the client API for LocalAlgorithmService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type LocalAlgorithmServiceClient interface {
+	Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Delete(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Replace(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	CreateMany(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	DeleteMany(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
+}
+
+type localAlgorithmServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewLocalAlgorithmServiceClient(cc grpc.ClientConnInterface) LocalAlgorithmServiceClient {
+	return &localAlgorithmServiceClient{cc}
+}
+
+func (c *localAlgorithmServiceClient) Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_Query_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_Get_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) Delete(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_Delete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_Update_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) Replace(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_Replace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_Create_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) CreateMany(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_CreateMany_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *localAlgorithmServiceClient) DeleteMany(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, LocalAlgorithmService_DeleteMany_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// LocalAlgorithmServiceServer is the server API for LocalAlgorithmService service.
+// All implementations must embed UnimplementedLocalAlgorithmServiceServer
+// for forward compatibility
+type LocalAlgorithmServiceServer interface {
+	Query(context.Context, *api.QueryRequest) (*api.Response, error)
+	Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
+	Delete(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
+	Update(context.Context, *api.UpdateRequest) (*api.Response, error)
+	Replace(context.Context, *api.UpdateRequest) (*api.Response, error)
+	Create(context.Context, *api.CreateRequest) (*api.Response, error)
+	CreateMany(context.Context, *api.CreateRequest) (*api.Response, error)
+	DeleteMany(context.Context, *api.QueryRequest) (*api.Response, error)
+	mustEmbedUnimplementedLocalAlgorithmServiceServer()
+}
+
+// UnimplementedLocalAlgorithmServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedLocalAlgorithmServiceServer struct {
+}
+
+func (UnimplementedLocalAlgorithmServiceServer) Query(context.Context, *api.QueryRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) Delete(context.Context, *api.GetOrDeleteRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) Update(context.Context, *api.UpdateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) Replace(context.Context, *api.UpdateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Replace not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) Create(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) CreateMany(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMany not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) DeleteMany(context.Context, *api.QueryRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteMany not implemented")
+}
+func (UnimplementedLocalAlgorithmServiceServer) mustEmbedUnimplementedLocalAlgorithmServiceServer() {}
+
+// UnsafeLocalAlgorithmServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to LocalAlgorithmServiceServer will
+// result in compilation errors.
+type UnsafeLocalAlgorithmServiceServer interface {
+	mustEmbedUnimplementedLocalAlgorithmServiceServer()
+}
+
+func RegisterLocalAlgorithmServiceServer(s grpc.ServiceRegistrar, srv LocalAlgorithmServiceServer) {
+	s.RegisterService(&LocalAlgorithmService_ServiceDesc, srv)
+}
+
+func _LocalAlgorithmService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).Query(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_Query_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).Query(ctx, req.(*api.QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.GetOrDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_Get_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).Get(ctx, req.(*api.GetOrDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.GetOrDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_Delete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).Delete(ctx, req.(*api.GetOrDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_Update_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).Update(ctx, req.(*api.UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_Replace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).Replace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_Replace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).Replace(ctx, req.(*api.UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_Create_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).Create(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_CreateMany_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).CreateMany(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_CreateMany_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).CreateMany(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocalAlgorithmService_DeleteMany_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocalAlgorithmServiceServer).DeleteMany(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LocalAlgorithmService_DeleteMany_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocalAlgorithmServiceServer).DeleteMany(ctx, req.(*api.QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// LocalAlgorithmService_ServiceDesc is the grpc.ServiceDesc for LocalAlgorithmService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var LocalAlgorithmService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "algorithm.LocalAlgorithmService",
+	HandlerType: (*LocalAlgorithmServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Query",
+			Handler:    _LocalAlgorithmService_Query_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _LocalAlgorithmService_Get_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _LocalAlgorithmService_Delete_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _LocalAlgorithmService_Update_Handler,
+		},
+		{
+			MethodName: "Replace",
+			Handler:    _LocalAlgorithmService_Replace_Handler,
+		},
+		{
+			MethodName: "Create",
+			Handler:    _LocalAlgorithmService_Create_Handler,
+		},
+		{
+			MethodName: "CreateMany",
+			Handler:    _LocalAlgorithmService_CreateMany_Handler,
+		},
+		{
+			MethodName: "DeleteMany",
+			Handler:    _LocalAlgorithmService_DeleteMany_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "algorithm/algorithm.proto",
+}
+
+const (
 	AlgorithmService_HealthCheck_FullMethodName  = "/algorithm.AlgorithmService/HealthCheck"
 	AlgorithmService_SchemaStream_FullMethodName = "/algorithm.AlgorithmService/SchemaStream"
 	AlgorithmService_RunStream_FullMethodName    = "/algorithm.AlgorithmService/RunStream"

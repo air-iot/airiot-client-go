@@ -23,7 +23,8 @@ type Client struct {
 	opts        []grpc.DialOption
 	middlewares []middleware.Middleware
 
-	AlgorithmClient AlgorithmServiceClient
+	AlgorithmClient      AlgorithmServiceClient
+	LocalAlgorithmClient LocalAlgorithmServiceClient
 }
 
 func NewClient(cfg config.Config, registry *etcd.Registry, cred grpc.DialOption, httpCred middleware.Middleware) (*Client, func(), error) {
@@ -104,4 +105,16 @@ func (c *Client) GetAlgorithmServiceClient() (AlgorithmServiceClient, error) {
 		return nil, errors.NewMsg("客户端是空")
 	}
 	return c.AlgorithmClient, nil
+}
+
+func (c *Client) GetLocalAlgorithmClient() (LocalAlgorithmServiceClient, error) {
+	if c.conn == nil {
+		if err := c.createConn(); err != nil {
+			return nil, err
+		}
+	}
+	if c.LocalAlgorithmClient == nil {
+		return nil, errors.NewMsg("客户端是空")
+	}
+	return c.LocalAlgorithmClient, nil
 }
