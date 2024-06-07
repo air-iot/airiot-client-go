@@ -2,6 +2,7 @@ package api_client_go
 
 import (
 	"fmt"
+	"github.com/air-iot/api-client-go/v4/sync"
 	"log"
 
 	"dario.cat/mergo"
@@ -44,6 +45,7 @@ type Client struct {
 	AlgorithmClient   *algorithm.Client
 	DataRelayClient   *datarelay.Client
 	JsServerClient    *jsserver.Client
+	SyncClient        *sync.Client
 }
 
 func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error) {
@@ -147,6 +149,10 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
+	syncClient, cleanSync, err := sync.NewClient(cfg, r, cred, httpCred)
+	if err != nil {
+		return nil, nil, err
+	}
 	return &Client{
 			RegistryClient:    NewKartosRegistryClient(cli),
 			AuthClient:        authCli,
@@ -162,6 +168,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			AlgorithmClient:   algorithmClient,
 			DataRelayClient:   dataRelayClient,
 			JsServerClient:    jsServerClient,
+			SyncClient:        syncClient,
 		}, func() {
 			cleanSpm()
 			cleanCore()
@@ -175,5 +182,6 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			cleanAlgorithm()
 			cleanDataRelay()
 			cleanJsServer()
+			cleanSync()
 		}, nil
 }
