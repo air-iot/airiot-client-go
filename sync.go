@@ -11,6 +11,36 @@ import (
 	"github.com/air-iot/json"
 )
 
+func (c *Client) CreateSync(ctx context.Context, projectId string, createData, result interface{}) error {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	if createData == nil {
+		return errors.NewMsg("插入数据为空")
+	}
+	cli, err := c.SyncClient.GetSyncServiceClient()
+	if err != nil {
+		return errors.NewMsg("获取客户端错误,%s", err)
+	}
+	bts, err := json.Marshal(createData)
+	if err != nil {
+		return errors.NewMsg("marshal 插入数据为空")
+	}
+	res, err := cli.Create(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.CreateRequest{Data: bts})
+	if err != nil {
+		return errors.NewMsg("请求错误, %s", err)
+	}
+	if !res.GetStatus() {
+		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+	}
+	if err := json.Unmarshal(res.GetResult(), result); err != nil {
+		return errors.NewMsg("解析请求结果错误, %s", err)
+	}
+	return nil
+}
+
 // QuerySync Sync
 func (c *Client) QuerySync(ctx context.Context, projectId string, query, result interface{}) (int, error) {
 	if projectId == "" {

@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SyncServiceClient interface {
+	Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
 	Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
 	Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
 	Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
@@ -36,6 +37,15 @@ type syncServiceClient struct {
 
 func NewSyncServiceClient(cc grpc.ClientConnInterface) SyncServiceClient {
 	return &syncServiceClient{cc}
+}
+
+func (c *syncServiceClient) Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, "/sync.SyncService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *syncServiceClient) Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
@@ -87,6 +97,7 @@ func (c *syncServiceClient) Replace(ctx context.Context, in *api.UpdateRequest, 
 // All implementations must embed UnimplementedSyncServiceServer
 // for forward compatibility
 type SyncServiceServer interface {
+	Create(context.Context, *api.CreateRequest) (*api.Response, error)
 	Query(context.Context, *api.QueryRequest) (*api.Response, error)
 	Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
 	Update(context.Context, *api.UpdateRequest) (*api.Response, error)
@@ -99,6 +110,9 @@ type SyncServiceServer interface {
 type UnimplementedSyncServiceServer struct {
 }
 
+func (UnimplementedSyncServiceServer) Create(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
 func (UnimplementedSyncServiceServer) Query(context.Context, *api.QueryRequest) (*api.Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
 }
@@ -125,6 +139,24 @@ type UnsafeSyncServiceServer interface {
 
 func RegisterSyncServiceServer(s grpc.ServiceRegistrar, srv SyncServiceServer) {
 	s.RegisterService(&SyncService_ServiceDesc, srv)
+}
+
+func _SyncService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SyncServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sync.SyncService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SyncServiceServer).Create(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _SyncService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -224,6 +256,10 @@ var SyncService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "sync.SyncService",
 	HandlerType: (*SyncServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _SyncService_Create_Handler,
+		},
 		{
 			MethodName: "Query",
 			Handler:    _SyncService_Query_Handler,
