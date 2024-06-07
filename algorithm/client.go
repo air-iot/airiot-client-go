@@ -67,6 +67,7 @@ func (c *Client) createConn() error {
 		return errors.NewMsg("grpc.Dial error: %s", err)
 	}
 	c.AlgorithmClient = NewAlgorithmServiceClient(cc)
+	c.LocalAlgorithmClient = NewLocalAlgorithmServiceClient(cc)
 	c.conn = cc
 	return nil
 }
