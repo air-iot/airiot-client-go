@@ -196,17 +196,20 @@ message UpdateDataRequest {
   string table = 1;
   string id = 2;
   bytes data = 3;
+  bool  closeRequire = 4;
 }
 
 message MultiUpdateDataRequest {
   string table = 1;
   bytes query = 2;
   bytes data = 3;
+  bool  closeRequire = 4;
 }
 
 message CreateDataRequest {
   string table = 1;
   bytes data = 2;
+  bool  closeRequire = 3;
 }
 
 message LoginUserRequest {

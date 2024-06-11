@@ -1174,7 +1174,7 @@ func (c *Client) DeleteManyTableData(ctx context.Context, projectId, tableName s
 	return nil
 }
 
-func (c *Client) UpdateTableData(ctx context.Context, projectId, tableName, id string, updateData, result interface{}) error {
+func (c *Client) UpdateTableData(ctx context.Context, projectId, tableName, id string, closeRequire bool, updateData, result interface{}) error {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
@@ -1197,7 +1197,7 @@ func (c *Client) UpdateTableData(ctx context.Context, projectId, tableName, id s
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
-		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts})
+		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts, CloseRequire: closeRequire})
 	if err != nil {
 		return errors.NewMsg("请求错误, %s", err)
 	}
@@ -1210,7 +1210,7 @@ func (c *Client) UpdateTableData(ctx context.Context, projectId, tableName, id s
 	return nil
 }
 
-func (c *Client) ReplaceTableData(ctx context.Context, projectId, tableName, id string, updateData, result interface{}) error {
+func (c *Client) ReplaceTableData(ctx context.Context, projectId, tableName, id string, closeRequire bool, updateData, result interface{}) error {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
@@ -1233,7 +1233,7 @@ func (c *Client) ReplaceTableData(ctx context.Context, projectId, tableName, id 
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
-		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts})
+		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts, CloseRequire: closeRequire})
 	if err != nil {
 		return errors.NewMsg("请求错误, %s", err)
 	}
@@ -1246,7 +1246,7 @@ func (c *Client) ReplaceTableData(ctx context.Context, projectId, tableName, id 
 	return nil
 }
 
-func (c *Client) CreateTableData(ctx context.Context, projectId, tableName string, createData, result interface{}) error {
+func (c *Client) CreateTableData(ctx context.Context, projectId, tableName string, closeRequire bool, createData, result interface{}) error {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
@@ -1267,8 +1267,9 @@ func (c *Client) CreateTableData(ctx context.Context, projectId, tableName strin
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.CreateDataRequest{
-			Table: tableName,
-			Data:  bts,
+			Table:        tableName,
+			Data:         bts,
+			CloseRequire: closeRequire,
 		})
 	if err != nil {
 		return errors.NewMsg("请求错误, %s", err)
@@ -1282,7 +1283,7 @@ func (c *Client) CreateTableData(ctx context.Context, projectId, tableName strin
 	return nil
 }
 
-func (c *Client) CreateManyTableData(ctx context.Context, projectId, tableName string, createData, result interface{}) error {
+func (c *Client) CreateManyTableData(ctx context.Context, projectId, tableName string, closeRequire bool, createData, result interface{}) error {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
@@ -1303,8 +1304,9 @@ func (c *Client) CreateManyTableData(ctx context.Context, projectId, tableName s
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.CreateDataRequest{
-			Table: tableName,
-			Data:  bts,
+			Table:        tableName,
+			Data:         bts,
+			CloseRequire: closeRequire,
 		})
 	if err != nil {
 		return errors.NewMsg("请求错误, %s", err)
@@ -1629,7 +1631,7 @@ func (c *Client) FindTableDataDeptByDeptIDs(ctx context.Context, projectId strin
 	return nil
 }
 
-func (c *Client) UpdateManyTableData(ctx context.Context, projectId, tableName string, query, updateData, result interface{}) error {
+func (c *Client) UpdateManyTableData(ctx context.Context, projectId, tableName string, closeRequire bool, query, updateData, result interface{}) error {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
@@ -1650,7 +1652,7 @@ func (c *Client) UpdateManyTableData(ctx context.Context, projectId, tableName s
 	}
 	res, err := cli.UpdateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
-		&core.MultiUpdateDataRequest{Table: tableName, Query: bts, Data: btsUpdate})
+		&core.MultiUpdateDataRequest{Table: tableName, Query: bts, Data: btsUpdate, CloseRequire: closeRequire})
 	if err != nil {
 		return errors.NewMsg("请求错误, %s", err)
 	}
