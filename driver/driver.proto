@@ -69,6 +69,11 @@ service DriverInstructCronService {
   rpc DeleteMany (api.QueryRequest) returns (api.Response) {}
 }
 
+service DriverInstructService {
+  rpc GetCommands (RequestCommand) returns (api.Response) {}
+  rpc Update (api.UpdateRequest) returns (api.Response) {}
+}
+
 message UpdateRequest {
   string id = 1;
   bytes data = 2;
@@ -212,4 +217,10 @@ message ClientHttpProxyRequest {
   string groupId = 3;
   bytes headers = 4;
   bytes data = 5;
+}
+
+message RequestCommand {
+  string projectId = 1;
+  string tableId = 2;
+  string tableDataId = 3;
 }

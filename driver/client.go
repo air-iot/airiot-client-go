@@ -28,6 +28,7 @@ type Client struct {
 	driverInstanceServiceClient     DriverInstanceServiceClient
 	driverEventCronServiceClient    DriverEventCronServiceClient
 	driverInstructCronServiceClient DriverInstructCronServiceClient
+	driverInstructServiceClient     DriverInstructServiceClient
 }
 
 func NewClient(cfg config.Config, registry *etcd.Registry, cred grpc.DialOption, httpCred middleware.Middleware) (*Client, func(), error) {
@@ -73,6 +74,7 @@ func (c *Client) createConn() error {
 	c.driverInstanceServiceClient = NewDriverInstanceServiceClient(cc)
 	c.driverEventCronServiceClient = NewDriverEventCronServiceClient(cc)
 	c.driverInstructCronServiceClient = NewDriverInstructCronServiceClient(cc)
+	c.driverInstructServiceClient = NewDriverInstructServiceClient(cc)
 	c.conn = cc
 	return nil
 }
@@ -147,4 +149,16 @@ func (c *Client) GetDriverInstructCronServiceClient() (DriverEventCronServiceCli
 		return nil, errors.NewMsg("客户端是空")
 	}
 	return c.driverInstructCronServiceClient, nil
+}
+
+func (c *Client) GetDriverInstructServiceClient() (DriverInstructServiceClient, error) {
+	if c.conn == nil {
+		if err := c.createConn(); err != nil {
+			return nil, err
+		}
+	}
+	if c.driverInstructServiceClient == nil {
+		return nil, errors.NewMsg("客户端是空")
+	}
+	return c.driverInstructServiceClient, nil
 }

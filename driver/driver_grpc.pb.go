@@ -1907,3 +1907,130 @@ var DriverInstructCronService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "driver/driver.proto",
 }
+
+const (
+	DriverInstructService_GetCommands_FullMethodName = "/driver.DriverInstructService/GetCommands"
+	DriverInstructService_Update_FullMethodName      = "/driver.DriverInstructService/Update"
+)
+
+// DriverInstructServiceClient is the client API for DriverInstructService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type DriverInstructServiceClient interface {
+	GetCommands(ctx context.Context, in *RequestCommand, opts ...grpc.CallOption) (*api.Response, error)
+	Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
+}
+
+type driverInstructServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDriverInstructServiceClient(cc grpc.ClientConnInterface) DriverInstructServiceClient {
+	return &driverInstructServiceClient{cc}
+}
+
+func (c *driverInstructServiceClient) GetCommands(ctx context.Context, in *RequestCommand, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, DriverInstructService_GetCommands_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverInstructServiceClient) Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, DriverInstructService_Update_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DriverInstructServiceServer is the server API for DriverInstructService service.
+// All implementations must embed UnimplementedDriverInstructServiceServer
+// for forward compatibility
+type DriverInstructServiceServer interface {
+	GetCommands(context.Context, *RequestCommand) (*api.Response, error)
+	Update(context.Context, *api.UpdateRequest) (*api.Response, error)
+	mustEmbedUnimplementedDriverInstructServiceServer()
+}
+
+// UnimplementedDriverInstructServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedDriverInstructServiceServer struct {
+}
+
+func (UnimplementedDriverInstructServiceServer) GetCommands(context.Context, *RequestCommand) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCommands not implemented")
+}
+func (UnimplementedDriverInstructServiceServer) Update(context.Context, *api.UpdateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (UnimplementedDriverInstructServiceServer) mustEmbedUnimplementedDriverInstructServiceServer() {}
+
+// UnsafeDriverInstructServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DriverInstructServiceServer will
+// result in compilation errors.
+type UnsafeDriverInstructServiceServer interface {
+	mustEmbedUnimplementedDriverInstructServiceServer()
+}
+
+func RegisterDriverInstructServiceServer(s grpc.ServiceRegistrar, srv DriverInstructServiceServer) {
+	s.RegisterService(&DriverInstructService_ServiceDesc, srv)
+}
+
+func _DriverInstructService_GetCommands_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestCommand)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverInstructServiceServer).GetCommands(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverInstructService_GetCommands_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverInstructServiceServer).GetCommands(ctx, req.(*RequestCommand))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverInstructService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverInstructServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverInstructService_Update_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverInstructServiceServer).Update(ctx, req.(*api.UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// DriverInstructService_ServiceDesc is the grpc.ServiceDesc for DriverInstructService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DriverInstructService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "driver.DriverInstructService",
+	HandlerType: (*DriverInstructServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetCommands",
+			Handler:    _DriverInstructService_GetCommands_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _DriverInstructService_Update_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "driver/driver.proto",
+}
