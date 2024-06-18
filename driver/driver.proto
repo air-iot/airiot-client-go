@@ -220,7 +220,6 @@ message ClientHttpProxyRequest {
 }
 
 message RequestCommand {
-  string projectId = 1;
-  string tableId = 2;
-  string tableDataId = 3;
+  string tableId = 1;
+  string tableDataId = 2;
 }
