@@ -583,8 +583,10 @@ func (c *Client) DeleteAllDatasetViews(ctx context.Context, projectId string) (i
 	if err != nil {
 		return 0, errors.NewMsg("获取客户端错误,%s", err)
 	}
+	md := dataservice.ContextDataWPw(ctx)
+	md[config.XRequestProject] = projectId
 	res, err := cli.DeleteAll(
-		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		apicontext.GetGrpcContext(ctx, md),
 		&api.QueryRequest{})
 	if err != nil {
 		return 0, errors.NewMsg("请求错误, %s", err)
@@ -736,8 +738,10 @@ func (c *Client) DeleteAllDatasets(ctx context.Context, projectId string) (int64
 	if err != nil {
 		return 0, errors.NewMsg("获取客户端错误,%s", err)
 	}
+	md := dataservice.ContextDataWPw(ctx)
+	md[config.XRequestProject] = projectId
 	res, err := cli.DeleteAll(
-		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		apicontext.GetGrpcContext(ctx, md),
 		&api.QueryRequest{})
 	if err != nil {
 		return 0, errors.NewMsg("请求错误, %s", err)
