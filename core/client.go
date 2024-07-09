@@ -5,7 +5,7 @@ import (
 
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/conn"
-	"github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/logger"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/middleware"
@@ -80,7 +80,7 @@ func (c *Client) createConn() error {
 	logger.Infof("%s grpc client cc, %+v", serviceName, c.config)
 	cc, err := conn.CreateConn(serviceName, c.config, c.registry, c.opts...)
 	if err != nil {
-		return errors.NewMsg("grpc.Dial error: %s", err)
+		return err
 	}
 	c.appServiceClient = NewAppServiceClient(cc)
 	c.licenseServiceClient = NewLicenseServiceClient(cc)
@@ -112,7 +112,7 @@ func (c *Client) createRestConn() error {
 	logger.Infof("%s http client createConn, %+v", serviceName, c.config)
 	cc, err := conn.CreateRestConn(serviceName, c.config, c.registry, c.middlewares...)
 	if err != nil {
-		return errors.NewMsg("rest error: %s", err)
+		return err
 	}
 	c.restClient = cc
 	return nil
@@ -134,7 +134,7 @@ func (c *Client) GetAppServiceClient() (AppServiceClient, error) {
 		}
 	}
 	if c.appServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.appServiceClient, nil
 }
@@ -146,7 +146,7 @@ func (c *Client) GetLicenseServiceClient() (LicenseServiceClient, error) {
 		}
 	}
 	if c.licenseServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.licenseServiceClient, nil
 }
@@ -158,7 +158,7 @@ func (c *Client) GetLogServiceClient() (LogServiceClient, error) {
 		}
 	}
 	if c.logServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.logServiceClient, nil
 }
@@ -170,7 +170,7 @@ func (c *Client) GetUserServiceClient() (UserServiceClient, error) {
 		}
 	}
 	if c.userServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.userServiceClient, nil
 }
@@ -182,7 +182,7 @@ func (c *Client) GetTableSchemaServiceClient() (TableSchemaServiceClient, error)
 		}
 	}
 	if c.tableSchemaClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.tableSchemaClient, nil
 }
@@ -194,7 +194,7 @@ func (c *Client) GetTableRecordServiceClient() (TableRecordServiceClient, error)
 		}
 	}
 	if c.tableRecordClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.tableRecordClient, nil
 }
@@ -206,7 +206,7 @@ func (c *Client) GetTableDataServiceClient() (TableDataServiceClient, error) {
 		}
 	}
 	if c.tableDataClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.tableDataClient, nil
 }
@@ -218,7 +218,7 @@ func (c *Client) GetMessageServiceClient() (MessageServiceClient, error) {
 		}
 	}
 	if c.messageClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.messageClient, nil
 }
@@ -230,7 +230,7 @@ func (c *Client) GetDataQueryServiceClient() (DataQueryServiceClient, error) {
 		}
 	}
 	if c.dataQueryClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.dataQueryClient, nil
 }
@@ -242,7 +242,7 @@ func (c *Client) GetRoleServiceClient() (RoleServiceClient, error) {
 		}
 	}
 	if c.roleClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.roleClient, nil
 }
@@ -254,7 +254,7 @@ func (c *Client) GetCatalogServiceClient() (CatalogServiceClient, error) {
 		}
 	}
 	if c.catalogClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.catalogClient, nil
 }
@@ -266,7 +266,7 @@ func (c *Client) GetDeptServiceClient() (DeptServiceClient, error) {
 		}
 	}
 	if c.deptClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.deptClient, nil
 }
@@ -278,7 +278,7 @@ func (c *Client) GetSettingServiceClient() (SettingServiceClient, error) {
 		}
 	}
 	if c.settingClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.settingClient, nil
 }
@@ -290,7 +290,7 @@ func (c *Client) GetSystemVariableServiceClient() (SystemVariableServiceClient, 
 		}
 	}
 	if c.systemVariablServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.systemVariablServiceClient, nil
 }
@@ -302,7 +302,7 @@ func (c *Client) GetBackupServiceClient() (BackupServiceClient, error) {
 		}
 	}
 	if c.backupServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.backupServiceClient, nil
 }
@@ -314,7 +314,7 @@ func (c *Client) GetTaskManagerServiceClient() (TaskManagerServiceClient, error)
 		}
 	}
 	if c.taskManagerServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.taskManagerServiceClient, nil
 }
@@ -326,7 +326,7 @@ func (c *Client) GetDashboardServiceClient() (DashboardServiceClient, error) {
 		}
 	}
 	if c.dashboardClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.dashboardClient, nil
 }

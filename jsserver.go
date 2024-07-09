@@ -4,30 +4,30 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/api-client-go/v4/jsserver"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
 
 func (c *Client) RunJsScript(ctx context.Context, variables interface{}, script string) ([]byte, error) {
 	cli, err := c.JsServerClient.GetScriptClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	b, err := json.Marshal(variables)
 	if err != nil {
-		return nil, fmt.Errorf("json.Marshal error: %w", err)
+		return nil, errors.Wrap(err, "序列化请求数据错误")
 	}
 	res, err := cli.Run(ctx, &jsserver.Request{
 		Content: script,
 		Params:  b,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("client.Run error: %w", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
-	if res.Status {
-		return res.Result, nil
+	if res.GetStatus() {
+		return res.GetResult(), nil
 	} else {
-		return nil, fmt.Errorf("返回错误: info=%s,detail=%s", res.Info, res.Detail)
+		return nil, errors.Wrap(fmt.Errorf(res.GetDetail()), res.GetInfo())
 	}
 }

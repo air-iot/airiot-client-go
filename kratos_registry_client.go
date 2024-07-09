@@ -2,10 +2,11 @@ package api_client_go
 
 import (
 	"context"
+	"strings"
+
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/registry"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"strings"
 )
 
 type KratosRegistryClient struct {

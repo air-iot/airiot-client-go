@@ -7,8 +7,8 @@ import (
 	"github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/driver"
-	"github.com/air-iot/api-client-go/v4/errors"
-	cErrors "github.com/air-iot/errors"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
 
@@ -34,27 +34,27 @@ func (c *Client) BatchCommand(ctx context.Context, projectId string, data interf
 		projectId = config.XRequestProjectDefault
 	}
 	if data == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.BatchCommand(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -65,30 +65,30 @@ func (c *Client) ChangeCommand(ctx context.Context, projectId, id string, data, 
 		projectId = config.XRequestProjectDefault
 	}
 	//if id == "" {
-	//	return errors.NewMsg("id为空")
+	//	return errors.New("id为空")
 	//}
 	cli, err := c.DriverClient.GetDriverServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if data == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.ChangeCommand(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -100,26 +100,26 @@ func (c *Client) DriverWriteTag(ctx context.Context, projectId string, data *Dri
 	}
 	cli, err := c.DriverClient.GetDriverServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if data == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.WriteTag(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -131,26 +131,26 @@ func (c *Client) DriverBatchWriteTag(ctx context.Context, projectId string, data
 	}
 	cli, err := c.DriverClient.GetDriverServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if data == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.BatchWriteTag(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -162,23 +162,23 @@ func (c *Client) HttpProxy(ctx context.Context, projectId, typeId, groupId strin
 	}
 	cli, err := c.DriverClient.GetDriverServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if data == nil {
-		return errors.NewMsg("数据为空")
+		return errors.Wrap(err, "序列化数据错误")
 	}
 
 	var headersBytes []byte
 	if headers != nil {
 		headersBytes, err = json.Marshal(headers)
 		if err != nil {
-			return errors.NewMsg("headers序列化失败")
+			return errors.New("headers序列化失败")
 		}
 	}
 
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return errors.NewMsg("数据为空")
+		return errors.Wrap(err, "序列化请求数据错误")
 	}
 	res, err := cli.HttpProxy(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -190,13 +190,13 @@ func (c *Client) HttpProxy(ctx context.Context, projectId, typeId, groupId strin
 			Data:      bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -207,23 +207,23 @@ func (c *Client) QueryDriverInstance(ctx context.Context, projectId string, quer
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DriverClient.GetDriverInstanceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -233,26 +233,26 @@ func (c *Client) GetDriverInstance(ctx context.Context, projectId, id string, re
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstanceServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -262,24 +262,24 @@ func (c *Client) DeleteDriverInstance(ctx context.Context, projectId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstanceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -289,32 +289,32 @@ func (c *Client) UpdateDriverInstance(ctx context.Context, projectId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.DriverClient.GetDriverInstanceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -324,30 +324,30 @@ func (c *Client) ReplaceDriverInstance(ctx context.Context, projectId, id string
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstanceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -357,27 +357,27 @@ func (c *Client) CreateDriverInstance(ctx context.Context, projectId string, cre
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstanceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -388,23 +388,23 @@ func (c *Client) QueryDriverEventCron(ctx context.Context, projectId string, que
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -414,26 +414,26 @@ func (c *Client) GetDriverEventCron(ctx context.Context, projectId, id string, r
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -443,20 +443,20 @@ func (c *Client) DeleteDriverEventCron(ctx context.Context, projectId, id string
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -466,29 +466,29 @@ func (c *Client) UpdateDriverEventCron(ctx context.Context, projectId, id string
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -498,27 +498,27 @@ func (c *Client) ReplaceDriverEventCron(ctx context.Context, projectId, id strin
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -528,27 +528,27 @@ func (c *Client) CreateDriverEventCron(ctx context.Context, projectId string, cr
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -558,27 +558,27 @@ func (c *Client) CreateManyDriverEventCron(ctx context.Context, projectId string
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -589,20 +589,20 @@ func (c *Client) DeleteManyDriverEventCron(ctx context.Context, projectId string
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DriverClient.GetDriverEventCronServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.Count, nil
 }
@@ -613,23 +613,23 @@ func (c *Client) QueryDriverInstructCron(ctx context.Context, projectId string, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -639,26 +639,26 @@ func (c *Client) GetDriverInstructCron(ctx context.Context, projectId, id string
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -668,20 +668,20 @@ func (c *Client) DeleteDriverInstructCron(ctx context.Context, projectId, id str
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -691,29 +691,29 @@ func (c *Client) UpdateDriverInstructCron(ctx context.Context, projectId, id str
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -723,27 +723,27 @@ func (c *Client) ReplaceDriverInstructCron(ctx context.Context, projectId, id st
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -753,27 +753,27 @@ func (c *Client) CreateDriverInstructCron(ctx context.Context, projectId string,
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -783,27 +783,27 @@ func (c *Client) CreateManyDriverInstructCron(ctx context.Context, projectId str
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -814,20 +814,20 @@ func (c *Client) DeleteManyDriverInstructCron(ctx context.Context, projectId str
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DriverClient.GetDriverInstructCronServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.Count, nil
 }

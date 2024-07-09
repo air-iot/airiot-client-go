@@ -7,7 +7,8 @@ import (
 	"github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/engine"
-	"github.com/air-iot/api-client-go/v4/errors"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
 
@@ -42,11 +43,11 @@ type Handler func(param Params, data []byte) (map[string]interface{}, error)
 func (c *Client) Run(ctx context.Context, projectId, flowConfig string, elementB []byte, variables map[string]interface{}) (result *engine.RunResponse, err error) {
 	b, err := json.Marshal(variables)
 	if err != nil {
-		return nil, errors.NewMsg("序列化变量错误,%s", err)
+		return nil, errors.Wrap(err, "序列化变量错误")
 	}
 	cli, err := c.FlowEngineClient.GetDataServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Run(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &engine.RunRequest{
 		ProjectId: projectId,
@@ -58,7 +59,7 @@ func (c *Client) Run(ctx context.Context, projectId, flowConfig string, elementB
 		result = &engine.RunResponse{Job: res.Job}
 	}
 	if err != nil {
-		return result, errors.NewMsg("流程执行错误,%s", err)
+		return result, errors.Wrap(err, "流程执行错误")
 	}
 	return result, nil
 }
@@ -66,11 +67,11 @@ func (c *Client) Run(ctx context.Context, projectId, flowConfig string, elementB
 func (c *Client) Resume(ctx context.Context, projectId, jobId, elementId string, variables map[string]interface{}) error {
 	b, err := json.Marshal(variables)
 	if err != nil {
-		return errors.NewMsg("序列化变量错误,%s", err)
+		return errors.Wrap(err, "序列化变量错误")
 	}
 	cli, err := c.FlowEngineClient.GetDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if _, err := cli.Resume(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &engine.ResumeRequest{
 		ProjectId: projectId,
@@ -78,7 +79,7 @@ func (c *Client) Resume(ctx context.Context, projectId, jobId, elementId string,
 		ElementId: elementId,
 		Variables: b,
 	}); err != nil {
-		return errors.NewMsg("流程执行错误,%s", err)
+		return errors.Wrap(err, "流程执行错误")
 	}
 	return nil
 }
@@ -86,7 +87,7 @@ func (c *Client) Resume(ctx context.Context, projectId, jobId, elementId string,
 func (c *Client) Fail(ctx context.Context, projectId, jobId, elementId, errMessage string) error {
 	cli, err := c.FlowEngineClient.GetDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if _, err := cli.Fail(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &engine.FailRequest{
 		ProjectId:    projectId,
@@ -94,7 +95,7 @@ func (c *Client) Fail(ctx context.Context, projectId, jobId, elementId, errMessa
 		ElementId:    elementId,
 		ErrorMessage: errMessage,
 	}); err != nil {
-		return errors.NewMsg("流程执行错误,%s", err)
+		return errors.Wrap(err, "流程执行错误")
 	}
 	return nil
 }
@@ -105,23 +106,23 @@ func (c *Client) QueryFlowJobCron(ctx context.Context, projectId string, query, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -131,26 +132,26 @@ func (c *Client) GetFlowJobCron(ctx context.Context, projectId, id string, resul
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -160,20 +161,20 @@ func (c *Client) DeleteFlowJobCron(ctx context.Context, projectId, id string) er
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -183,29 +184,29 @@ func (c *Client) UpdateFlowJobCron(ctx context.Context, projectId, id string, up
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -215,27 +216,27 @@ func (c *Client) ReplaceFlowJobCron(ctx context.Context, projectId, id string, u
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -245,27 +246,27 @@ func (c *Client) CreateFlowJobCron(ctx context.Context, projectId string, create
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -275,27 +276,27 @@ func (c *Client) CreateManyFlowJobCron(ctx context.Context, projectId string, cr
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -306,20 +307,20 @@ func (c *Client) DeleteManyFlowJobCron(ctx context.Context, projectId string, qu
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.FlowEngineClient.GetFlowJobCronServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.Count, nil
 }
@@ -330,23 +331,23 @@ func (c *Client) QueryFlowLogCron(ctx context.Context, projectId string, query, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -356,26 +357,26 @@ func (c *Client) GetFlowLogCron(ctx context.Context, projectId, id string, resul
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -385,20 +386,20 @@ func (c *Client) DeleteFlowLogCron(ctx context.Context, projectId, id string) er
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -408,29 +409,29 @@ func (c *Client) UpdateFlowLogCron(ctx context.Context, projectId, id string, up
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -440,27 +441,27 @@ func (c *Client) CreateFlowLogCron(ctx context.Context, projectId string, create
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -470,27 +471,27 @@ func (c *Client) CreateManyFlowLogCron(ctx context.Context, projectId string, cr
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -501,20 +502,20 @@ func (c *Client) DeleteManyFlowLogCron(ctx context.Context, projectId string, qu
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.FlowEngineClient.GetFlowLogCronServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.Count, nil
 }

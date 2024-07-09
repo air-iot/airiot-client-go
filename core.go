@@ -12,8 +12,8 @@ import (
 	"github.com/air-iot/api-client-go/v4/apitransport"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/core"
-	"github.com/air-iot/api-client-go/v4/errors"
-	cErrors "github.com/air-iot/errors"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 	"github.com/air-iot/logger"
 )
@@ -21,17 +21,17 @@ import (
 func (c *Client) GetFileLicense(ctx context.Context, result interface{}) error {
 	cli, err := c.CoreClient.GetLicenseServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.GetFileLicense(ctx, &api.QueryRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -39,17 +39,17 @@ func (c *Client) GetFileLicense(ctx context.Context, result interface{}) error {
 func (c *Client) UseLicense(ctx context.Context, projectId string, result interface{}) error {
 	cli, err := c.CoreClient.GetLicenseServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.UseLicense(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &api.QueryRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -61,11 +61,11 @@ func (c *Client) UploadLicense(ctx context.Context, projectId, filename string, 
 
 	cli, err := c.CoreClient.GetLicenseServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	stream, err := cli.UploadLicense(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, "filename": filename}))
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 
 	//defer stream.CloseAndRecv()
@@ -77,11 +77,11 @@ func (c *Client) UploadLicense(ctx context.Context, projectId, filename string, 
 	for {
 		bytesRead, err := r.Read(buffer)
 		if err != nil {
-			return fmt.Errorf("读取授权文件错误:%s", err.Error())
+			return errors.Wrap(err, "读取授权文件错误")
 		}
 		err = stream.Send(&core.UploadFileRequest{Data: buffer[:bytesRead]})
 		if err != nil {
-			return fmt.Errorf("grpc发送授权文件错误:%s", err.Error())
+			return errors.Wrap(err, "grpc发送授权文件错误")
 		}
 		bytesReadAll += bytesRead
 
@@ -93,13 +93,13 @@ func (c *Client) UploadLicense(ctx context.Context, projectId, filename string, 
 
 			err := stream.Send(&core.UploadFileRequest{Data: []byte("down")})
 			if err != nil {
-				return fmt.Errorf("grpc发送结束标志错误:%s", err.Error())
+				return errors.Wrap(err, "grpc发送结束标志错误")
 			}
 
 			m := new(api.Response)
 			err = stream.RecvMsg(m)
 			if err != nil {
-				return fmt.Errorf("读取server响应错误:%s", err.Error())
+				return errors.Wrap(err, "读取server响应错误")
 			}
 			fmt.Printf("上传文件成功，服务器响应结果:%+v\n", m)
 
@@ -112,19 +112,19 @@ func (c *Client) UploadLicense(ctx context.Context, projectId, filename string, 
 func (c *Client) GetDriverLicense(ctx context.Context, projectId, driverId string, result interface{}) error {
 	cli, err := c.CoreClient.GetLicenseServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.GetDriverLicense(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &api.GetOrDeleteRequest{
 		Id: driverId,
 	})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -132,17 +132,17 @@ func (c *Client) GetDriverLicense(ctx context.Context, projectId, driverId strin
 func (c *Client) FindMachineCode(ctx context.Context, result interface{}) error {
 	cli, err := c.CoreClient.GetLicenseServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.FindMachineCode(ctx, &api.QueryRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -152,23 +152,23 @@ func (c *Client) GetCurrentUserInfo(ctx context.Context, projectId, token string
 		projectId = config.XRequestProjectDefault
 	}
 	if token == "" {
-		return errors.NewMsg("token is empty")
+		return errors.New("token is empty")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.GetCurrentUserInfo(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&core.LoginUserRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -178,30 +178,30 @@ func (c *Client) UserPermissionUpdate(ctx context.Context, projectId, token stri
 		projectId = config.XRequestProjectDefault
 	}
 	if token == "" {
-		return errors.NewMsg("token is empty")
+		return errors.New("token is empty")
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.UserPermissionUpdate(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -212,23 +212,23 @@ func (c *Client) QueryUser(ctx context.Context, projectId string, query, result 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -239,23 +239,23 @@ func (c *Client) QueryUserBackup(ctx context.Context, projectId string, query, r
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.QueryBackup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -266,23 +266,23 @@ func (c *Client) DeleteManyUserBackup(ctx context.Context, projectId string, que
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.DeleteManyBackup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -292,15 +292,15 @@ func (c *Client) CreateManyUserBackup(ctx context.Context, projectId string, cre
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateManyBackup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -308,13 +308,13 @@ func (c *Client) CreateManyUserBackup(ctx context.Context, projectId string, cre
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -324,26 +324,26 @@ func (c *Client) GetUser(ctx context.Context, projectId, id string, result inter
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -353,24 +353,24 @@ func (c *Client) DeleteUser(ctx context.Context, projectId, id string, result in
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -380,32 +380,32 @@ func (c *Client) UpdateUser(ctx context.Context, projectId, id string, updateDat
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -415,30 +415,30 @@ func (c *Client) ReplaceUser(ctx context.Context, projectId, id string, updateDa
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -448,28 +448,28 @@ func (c *Client) CreateLog(ctx context.Context, projectId string, createData, re
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 
 	cli, err := c.CoreClient.GetLogServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -479,27 +479,27 @@ func (c *Client) CreateUser(ctx context.Context, projectId string, createData, r
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetUserServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -510,23 +510,23 @@ func (c *Client) StatsQuery(ctx context.Context, projectId string, query, result
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.StatsQuery(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -537,23 +537,23 @@ func (c *Client) QueryTableSchema(ctx context.Context, projectId string, query, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -566,7 +566,7 @@ func (c *Client) RestQueryTableSchema(ctx context.Context, projectId string, que
 	if query != nil {
 		bts, err := json.Marshal(query)
 		if err != nil {
-			return errors.NewMsg("序列化查询参数为空, %v", err)
+			return errors.Wrap(err, "序列化查询参数为空")
 		}
 		params := url.Values{}
 		params.Set("query", string(bts))
@@ -587,23 +587,23 @@ func (c *Client) QueryTableSchemaDeviceByDriverAndGroup(ctx context.Context, pro
 		projectId = config.XRequestProjectDefault
 	}
 	if groupId == "" {
-		return errors.NewMsg("实例组ID为空")
+		return errors.New("实例组ID为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%v", err)
+		return err
 	}
 	res, err := cli.QueryDeviceByDriverAndGroup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetDeviceRequest{Driver: driverId, Group: groupId})
 	if err != nil {
-		return errors.NewError(err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功,%s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误,%v", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -613,23 +613,23 @@ func (c *Client) QueryOnlyTableSchemaDeviceByDriverAndGroup(ctx context.Context,
 		projectId = config.XRequestProjectDefault
 	}
 	if groupId == "" {
-		return errors.NewMsg("实例组ID为空")
+		return errors.New("实例组ID为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%v", err)
+		return err
 	}
 	res, err := cli.QueryTableDeviceByDriverAndGroup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetDeviceRequest{Driver: driverId, Group: groupId})
 	if err != nil {
-		return errors.NewError(err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误,%v", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -639,26 +639,26 @@ func (c *Client) FindDevice(ctx context.Context, projectId, driverId, groupId, t
 		projectId = config.XRequestProjectDefault
 	}
 	if groupId == "" {
-		return errors.NewMsg("实例组ID为空")
+		return errors.New("实例组ID为空")
 	}
 	if deviceId == "" {
-		return errors.NewMsg("设备ID为空")
+		return errors.New("设备ID为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%v", err)
+		return err
 	}
 	res, err := cli.FindDevice(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetDataDeviceRequest{Driver: driverId, Group: groupId, Table: tableId, Id: deviceId})
 	if err != nil {
-		return errors.NewError(err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误,%v", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -669,19 +669,19 @@ func (c *Client) QueryEmulator(ctx context.Context, projectId string, result int
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.QueryEmulator(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -691,26 +691,26 @@ func (c *Client) GetTableSchema(ctx context.Context, projectId, id string, resul
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -720,23 +720,23 @@ func (c *Client) DeleteTableSchema(ctx context.Context, projectId, id string, re
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -746,30 +746,30 @@ func (c *Client) UpdateTableSchema(ctx context.Context, projectId, id string, up
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -779,30 +779,30 @@ func (c *Client) ReplaceTableSchema(ctx context.Context, projectId, id string, u
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -812,27 +812,27 @@ func (c *Client) CreateTableSchema(ctx context.Context, projectId string, create
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -843,23 +843,23 @@ func (c *Client) QueryTableRecord(ctx context.Context, projectId string, query, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetTableRecordServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetCount(), nil
 }
@@ -869,26 +869,26 @@ func (c *Client) GetTableRecord(ctx context.Context, projectId, id string, resul
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableRecordServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -898,23 +898,23 @@ func (c *Client) DeleteTableRecord(ctx context.Context, projectId, id string, re
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableRecordServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -924,30 +924,30 @@ func (c *Client) UpdateTableRecord(ctx context.Context, projectId, id string, up
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetTableRecordServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -957,30 +957,30 @@ func (c *Client) ReplaceTableRecord(ctx context.Context, projectId, id string, u
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetTableRecordServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -990,27 +990,27 @@ func (c *Client) CreateTableRecord(ctx context.Context, projectId string, create
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTableRecordServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1020,15 +1020,15 @@ func (c *Client) QueryTableData(ctx context.Context, projectId, tableName string
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return 0, errors.NewMsg("表为空")
+		return 0, errors.New("表为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -1037,14 +1037,14 @@ func (c *Client) QueryTableData(ctx context.Context, projectId, tableName string
 			Query: bts,
 		})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	if res.GetResult() != nil {
 		if err := json.Unmarshal(res.GetResult(), result); err != nil {
-			return res.GetCount(), errors.NewMsg("解析请求结果错误, %s", err)
+			return res.GetCount(), errors.Wrap(err, "解析请求结果错误")
 		}
 	}
 	return res.GetCount(), nil
@@ -1055,15 +1055,15 @@ func (c *Client) QueryTableDataByTableId(ctx context.Context, projectId, tableId
 		projectId = config.XRequestProjectDefault
 	}
 	if tableId == "" {
-		return errors.NewMsg("记录id为空")
+		return errors.New("记录id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	res, err := cli.QueryByTableId(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -1072,13 +1072,13 @@ func (c *Client) QueryTableDataByTableId(ctx context.Context, projectId, tableId
 			Query: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1088,29 +1088,29 @@ func (c *Client) GetTableData(ctx context.Context, projectId, tableName, id stri
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return nil, errors.NewMsg("表为空")
+		return nil, errors.New("表为空")
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1120,26 +1120,26 @@ func (c *Client) DeleteTableData(ctx context.Context, projectId, tableName, id s
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1150,26 +1150,26 @@ func (c *Client) DeleteManyTableData(ctx context.Context, projectId, tableName s
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.QueryDataRequest{Table: tableName, Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1179,33 +1179,33 @@ func (c *Client) UpdateTableData(ctx context.Context, projectId, tableName, id s
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts, CloseRequire: closeRequire})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1215,33 +1215,33 @@ func (c *Client) ReplaceTableData(ctx context.Context, projectId, tableName, id 
 		projectId = config.XRequestProjectDefault
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts, CloseRequire: closeRequire})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1251,18 +1251,18 @@ func (c *Client) CreateTableData(ctx context.Context, projectId, tableName strin
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -1272,13 +1272,13 @@ func (c *Client) CreateTableData(ctx context.Context, projectId, tableName strin
 			CloseRequire: closeRequire,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1288,18 +1288,18 @@ func (c *Client) CreateManyTableData(ctx context.Context, projectId, tableName s
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -1309,13 +1309,13 @@ func (c *Client) CreateManyTableData(ctx context.Context, projectId, tableName s
 			CloseRequire: closeRequire,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1325,27 +1325,27 @@ func (c *Client) CreateMessage(ctx context.Context, projectId string, createData
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetMessageServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1356,23 +1356,23 @@ func (c *Client) QueryMessage(ctx context.Context, projectId string, query, resu
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetMessageServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return int(res.Count), nil
 }
@@ -1382,26 +1382,26 @@ func (c *Client) GetLog(ctx context.Context, projectId, id string, result interf
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetLogServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1412,23 +1412,23 @@ func (c *Client) QueryLog(ctx context.Context, projectId string, query, result i
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetLogServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return int(res.Count), nil
 }
@@ -1438,27 +1438,27 @@ func (c *Client) PostLatest(ctx context.Context, projectId string, createData, r
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetDataQueryServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.PostLatest(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1469,23 +1469,23 @@ func (c *Client) GetQuery(ctx context.Context, projectId string, query, result i
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetDataQueryServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.GetQuery(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1495,27 +1495,27 @@ func (c *Client) PostQuery(ctx context.Context, projectId string, createData, re
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetDataQueryServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.PostQuery(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1526,23 +1526,23 @@ func (c *Client) QueryRole(ctx context.Context, projectId string, query, result 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetRoleServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1552,23 +1552,23 @@ func (c *Client) AdminRoleCheck(ctx context.Context, projectId, token string, re
 		projectId = config.XRequestProjectDefault
 	}
 	if token == "" {
-		return errors.NewMsg("无Token认证信息")
+		return errors.New("无Token认证信息")
 	}
 	cli, err := c.CoreClient.GetRoleServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.AdminRoleCheck(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&api.EmptyRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1578,26 +1578,26 @@ func (c *Client) GetRole(ctx context.Context, projectId, id string, result inter
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetRoleServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1608,11 +1608,11 @@ func (c *Client) FindTableDataDeptByDeptIDs(ctx context.Context, projectId strin
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(ids)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	res, err := cli.FindTableDataDeptByDeptIDs(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -1620,13 +1620,13 @@ func (c *Client) FindTableDataDeptByDeptIDs(ctx context.Context, projectId strin
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1637,30 +1637,30 @@ func (c *Client) UpdateManyTableData(ctx context.Context, projectId, tableName s
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	btsUpdate, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.UpdateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.MultiUpdateDataRequest{Table: tableName, Query: bts, Data: btsUpdate, CloseRequire: closeRequire})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1671,22 +1671,22 @@ func (c *Client) GetWarningFilterIDs(ctx context.Context, projectId, token strin
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	if token == "" {
-		return errors.NewMsg("无Token认证信息")
+		return errors.New("无Token认证信息")
 	}
 	res, err := cli.GetWarningFilterIDs(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&api.EmptyRequest{})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1697,23 +1697,23 @@ func (c *Client) QueryCatalog(ctx context.Context, projectId string, query, resu
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetCatalogServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1723,26 +1723,26 @@ func (c *Client) GetCatalog(ctx context.Context, projectId, id string, result in
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetCatalogServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1753,23 +1753,23 @@ func (c *Client) QueryDept(ctx context.Context, projectId string, query, result 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetDeptServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1779,26 +1779,26 @@ func (c *Client) GetDept(ctx context.Context, projectId, id string, result inter
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetDeptServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1809,23 +1809,23 @@ func (c *Client) QuerySetting(ctx context.Context, projectId string, query, resu
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetSettingServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1836,23 +1836,23 @@ func (c *Client) QueryApp(ctx context.Context, projectId string, query, result i
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetAppServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1862,26 +1862,26 @@ func (c *Client) GetApp(ctx context.Context, projectId, id string, result interf
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetAppServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1892,23 +1892,23 @@ func (c *Client) QuerySystemVariable(ctx context.Context, projectId string, quer
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetSystemVariableServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1918,26 +1918,26 @@ func (c *Client) GetSystemVariable(ctx context.Context, projectId, id string, re
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetSystemVariableServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -1947,23 +1947,23 @@ func (c *Client) DeleteSystemVariable(ctx context.Context, projectId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetSystemVariableServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -1973,31 +1973,31 @@ func (c *Client) UpdateSystemVariable(ctx context.Context, projectId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.CoreClient.GetSystemVariableServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2007,30 +2007,30 @@ func (c *Client) ReplaceSystemVariable(ctx context.Context, projectId, id string
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetSystemVariableServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2040,27 +2040,27 @@ func (c *Client) CreateSystemVariable(ctx context.Context, projectId string, cre
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetSystemVariableServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2071,23 +2071,23 @@ func (c *Client) QueryBackup(ctx context.Context, projectId string, query, resul
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	*count = res.Count
 	return nil
@@ -2098,20 +2098,20 @@ func (c *Client) GetBackup(ctx context.Context, projectId, id string, result int
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
@@ -2119,7 +2119,7 @@ func (c *Client) GetBackup(ctx context.Context, projectId, id string, result int
 	logger.Infof("res.GetResult():%+v", string(res.GetResult()))
 
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -2129,23 +2129,23 @@ func (c *Client) DeleteBackup(ctx context.Context, projectId, id string, result 
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2155,31 +2155,31 @@ func (c *Client) UpdateBackup(ctx context.Context, projectId, id string, updateD
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2190,20 +2190,20 @@ func (c *Client) ExportBackup(ctx context.Context, projectId string, query inter
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return "", errors.NewMsg("序列化查询参数为空, %s", err)
+		return "", errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return "", errors.NewMsg("获取客户端错误,%s", err)
+		return "", err
 	}
 	res, err := cli.Export(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return "", errors.NewMsg("请求错误, %s", err)
+		return "", errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return "", errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return "", internalError.ParseResponse(res)
 	}
 	id := string(res.GetResult())
 	return id, nil
@@ -2215,20 +2215,20 @@ func (c *Client) ImportBackup(ctx context.Context, projectId string, query inter
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return "", errors.NewMsg("序列化查询参数为空, %s", err)
+		return "", errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return "", errors.NewMsg("获取客户端错误,%s", err)
+		return "", err
 	}
 	res, err := cli.Import(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return "", errors.NewMsg("请求错误, %s", err)
+		return "", errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return "", errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return "", internalError.ParseResponse(res)
 	}
 	id := string(res.GetResult())
 	return id, nil
@@ -2241,11 +2241,11 @@ func (c *Client) UploadBackup(ctx context.Context, projectId, password string, s
 
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	stream, err := cli.Upload(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, "password": password}))
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 
 	//defer stream.CloseAndRecv()
@@ -2296,14 +2296,14 @@ func (c *Client) DownloadBackup(ctx context.Context, projectId, id, password str
 
 	cli, err := c.CoreClient.GetBackupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err.Error())
+		return err
 	}
 
 	in := new(api.GetOrDeleteRequest)
 	in.Id = id
 	stream, err := cli.Download(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, "password": password, "id": id}), in)
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err.Error())
+		return errors.Wrap(err, "请求错误")
 	}
 
 	defer func() {
@@ -2317,14 +2317,14 @@ func (c *Client) DownloadBackup(ctx context.Context, projectId, id, password str
 		}
 
 		if err != nil {
-			return errors.NewMsg("stream.Recv错误, %s", err.Error())
+			return errors.Wrap(err, "stream.Recv错误")
 		}
 
 		logger.Infof("数据长度:%+v", len(d.GetData()))
 
 		n, err := w.Write(d.GetData())
 		if err != nil {
-			return errors.NewMsg(" w.Write错误, %s", err.Error())
+			return errors.Wrap(err, " w.Write错误")
 		}
 		logger.Infof("写入数据长度:%+v", n)
 	}
@@ -2363,29 +2363,29 @@ func (c *Client) FindTagByID(ctx context.Context, projectId, tableId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if tableId == "" {
-		return nil, errors.NewMsg("表为空")
+		return nil, errors.New("表为空")
 	}
 	if id == "" {
-		return nil, errors.NewMsg("设备id为空")
+		return nil, errors.New("设备id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.FindTagByID(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableId, Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -2396,23 +2396,23 @@ func (c *Client) QueryTaskManager(ctx context.Context, projectId string, query, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetTaskManagerServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2422,26 +2422,26 @@ func (c *Client) GetTaskManager(ctx context.Context, projectId, id string, resul
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTaskManagerServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -2451,24 +2451,24 @@ func (c *Client) DeleteTaskManager(ctx context.Context, projectId, id string, re
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTaskManagerServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2478,32 +2478,32 @@ func (c *Client) UpdateTaskManager(ctx context.Context, projectId, id string, up
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 
 	cli, err := c.CoreClient.GetTaskManagerServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2513,30 +2513,30 @@ func (c *Client) ReplaceTaskManager(ctx context.Context, projectId, id string, u
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.CoreClient.GetTaskManagerServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2546,27 +2546,27 @@ func (c *Client) CreateTaskManager(ctx context.Context, projectId string, create
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTaskManagerServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2576,23 +2576,23 @@ func (c *Client) FindTableCommandById(ctx context.Context, projectId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableSchemaServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.FindCommandByID(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2602,23 +2602,23 @@ func (c *Client) FindTableDataCommandById(ctx context.Context, projectId, tableI
 		projectId = config.XRequestProjectDefault
 	}
 	if tableId == "" || id == "" {
-		return errors.NewMsg("表或记录id为空")
+		return errors.New("表或记录id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.FindCommandByID(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableId, Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2628,15 +2628,15 @@ func (c *Client) QueryTableDataByDB(ctx context.Context, projectId, tableName st
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return 0, errors.NewMsg("表为空")
+		return 0, errors.New("表为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	res, err := cli.QueryByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -2645,14 +2645,14 @@ func (c *Client) QueryTableDataByDB(ctx context.Context, projectId, tableName st
 			Query: bts,
 		})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	if res.GetResult() != nil {
 		if err := json.Unmarshal(res.GetResult(), result); err != nil {
-			return res.GetCount(), errors.NewMsg("解析请求结果错误, %s", err)
+			return res.GetCount(), errors.Wrap(err, "解析请求结果错误")
 		}
 	}
 	return res.GetCount(), nil
@@ -2663,29 +2663,29 @@ func (c *Client) GetTableDataByDB(ctx context.Context, projectId, tableName, id 
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return nil, errors.NewMsg("表为空")
+		return nil, errors.New("表为空")
 	}
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.GetByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -2695,26 +2695,26 @@ func (c *Client) DeleteTableDataByDB(ctx context.Context, projectId, tableName, 
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.DeleteByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2725,26 +2725,26 @@ func (c *Client) DeleteManyTableDataByDB(ctx context.Context, projectId, tableNa
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数为空")
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.DeleteManyByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.QueryDataRequest{Table: tableName, Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2754,33 +2754,33 @@ func (c *Client) UpdateTableDataByDB(ctx context.Context, projectId, tableName, 
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.UpdateByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2790,33 +2790,33 @@ func (c *Client) ReplaceTableDataByDB(ctx context.Context, projectId, tableName,
 		projectId = config.XRequestProjectDefault
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.ReplaceByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2826,18 +2826,18 @@ func (c *Client) CreateTableDataByDB(ctx context.Context, projectId, tableName s
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -2846,13 +2846,13 @@ func (c *Client) CreateTableDataByDB(ctx context.Context, projectId, tableName s
 			Data:  bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2862,18 +2862,18 @@ func (c *Client) CreateManyTableDataByDB(ctx context.Context, projectId, tableNa
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateManyByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -2882,13 +2882,13 @@ func (c *Client) CreateManyTableDataByDB(ctx context.Context, projectId, tableNa
 			Data:  bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2898,27 +2898,27 @@ func (c *Client) UpdateManyTableDataByDB(ctx context.Context, projectId, tableNa
 		projectId = config.XRequestProjectDefault
 	}
 	if tableName == "" {
-		return errors.NewMsg("表为空")
+		return errors.New("表为空")
 	}
 	cli, err := c.CoreClient.GetTableDataServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	btsUpdate, err := json.Marshal(updateDataList)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据为空")
+		return errors.Wrap(err, "序列化更新数据为空")
 	}
 	res, err := cli.UpdateManyByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.MultiUpdateDataRequest{Table: tableName, Data: btsUpdate})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2928,27 +2928,27 @@ func (c *Client) CreateDashboard(ctx context.Context, projectId string, createDa
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.CoreClient.GetDashboardServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -2959,23 +2959,23 @@ func (c *Client) QueryDashboard(ctx context.Context, projectId string, query, re
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetDashboardServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, errors.NewErrorMsg(errors.NewMsg("响应不成功, %s", res.GetDetail()), res.GetInfo())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return int(res.Count), nil
 }
@@ -3009,17 +3009,17 @@ func (c *Client) UploadFileFromUrl(ctx context.Context, projectId string, source
 	if err := cli.Invoke(apitransport.NewClientContext(ctx, &apitransport.Transport{ReqHeader: map[string]string{config.XRequestProject: projectId}}),
 		"POST", "/core/mediaLibrary/saveFileFromUrl",
 		body, &result); err != nil {
-		return "", errors.NewMsg("请求错误, %s", err)
+		return "", errors.Wrap(err, "请求错误")
 	}
 
 	fileUrl, ok := result["url"]
 	if !ok {
-		return "", errors.NewMsg("上传媒体库成功, 但未返回文件的 url")
+		return "", errors.New("上传媒体库成功, 但未返回文件的 url")
 	}
 
 	fileUrlStr, ok := fileUrl.(string)
 	if !ok {
-		return "", errors.NewMsg("上传媒体库成功, 但返回文件的 url 不是字符串, %+v", fileUrl)
+		return "", fmt.Errorf("上传媒体库成功, 但返回文件的 url 不是字符串, %+v", fileUrl)
 	}
 
 	return fileUrlStr, nil

@@ -6,29 +6,29 @@ import (
 	"net/url"
 
 	"github.com/air-iot/api-client-go/v4/api"
-	"github.com/air-iot/api-client-go/v4/errors"
-	cErrors "github.com/air-iot/errors"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
 
 func (c *Client) QueryProject(ctx context.Context, query, result interface{}) error {
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误, %s", err)
+		return err
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	res, err := cli.Query(ctx, &api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg(", %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -36,17 +36,17 @@ func (c *Client) QueryProject(ctx context.Context, query, result interface{}) er
 func (c *Client) QueryProjectAvailable(ctx context.Context, result interface{}) error {
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误, %s", err)
+		return err
 	}
 	res, err := cli.QueryAvailable(ctx, &api.EmptyRequest{})
 	if err != nil {
-		return errors.NewMsg(", %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -56,7 +56,7 @@ func (c *Client) RestQueryProject(ctx context.Context, query, result interface{}
 	if query != nil {
 		bts, err := json.Marshal(query)
 		if err != nil {
-			return errors.NewMsg("序列化查询参数为空, %v", err)
+			return errors.Wrap(err, "序列化查询参数错误")
 		}
 		params := url.Values{}
 		params.Set("query", string(bts))
@@ -74,154 +74,154 @@ func (c *Client) RestQueryProject(ctx context.Context, query, result interface{}
 
 func (c *Client) GetProject(ctx context.Context, id string, result interface{}) ([]byte, error) {
 	if id == "" {
-		return nil, errors.NewMsg("id为空")
+		return nil, errors.New("id为空")
 	}
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	res, err := cli.Get(ctx, &api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
 
 func (c *Client) DeleteProject(ctx context.Context, id string, result interface{}) error {
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(ctx, &api.GetOrDeleteRequest{Id: id})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
 
 func (c *Client) UpdateProject(ctx context.Context, id string, updateData, result interface{}) error {
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("序列化更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(ctx, &api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
 
 func (c *Client) UpdateProjectLicense(ctx context.Context, id string, updateData, _ interface{}) error {
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("序列化更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.UpdateLicense(ctx, &api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return errors.NewMsg("解析请求结果错误, %s", err)
+	//	return errors.Wrap(err, "解析请求结果错误")
 	//}
 	return nil
 }
 
 func (c *Client) ReplaceProject(ctx context.Context, id string, updateData, result interface{}) error {
 	if id == "" {
-		return errors.NewMsg("id为空")
+		return errors.New("id为空")
 	}
 	if updateData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(updateData)
 	if err != nil {
-		return errors.NewMsg("序列化更新数据为空")
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(ctx, &api.UpdateRequest{Id: id, Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
 
 func (c *Client) CreateProject(ctx context.Context, createData, result interface{}) error {
 	if createData == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.SpmClient.GetProjectServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("序列化插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(ctx, &api.CreateRequest{Data: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }
@@ -229,21 +229,21 @@ func (c *Client) CreateProject(ctx context.Context, createData, result interface
 func (c *Client) QueryPmSetting(ctx context.Context, query, result interface{}) error {
 	cli, err := c.SpmClient.GetSettingServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误, %s", err)
+		return err
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.NewMsg("序列化查询参数为空, %s", err)
+		return errors.Wrap(err, "序列化查询参数错误")
 	}
 	res, err := cli.Query(ctx, &api.QueryRequest{Query: bts})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.NewMsg("解析请求结果错误, %s", err)
+		return errors.Wrap(err, "解析请求结果错误")
 	}
 	return nil
 }

@@ -3,15 +3,16 @@ package api_client_go
 import (
 	"bytes"
 	"context"
+	"fmt"
 
 	"github.com/air-iot/api-client-go/v4/apicontext"
-	cErrors "github.com/air-iot/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 
 	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/dataservice"
-	"github.com/air-iot/api-client-go/v4/errors"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
 )
 
 type ProxyResult struct {
@@ -102,23 +103,23 @@ func (c *Client) QueryDataGroup(ctx context.Context, projectId string, query, re
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDataGroupServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetCount(), nil
 }
@@ -128,15 +129,15 @@ func (c *Client) CreateDataGroups(ctx context.Context, projectId string, createD
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return 0, errors.NewMsg("插入数据为空")
+		return 0, errors.New("插入数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataGroupServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return 0, errors.NewMsg("marshal 插入数据为空")
+		return 0, errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -144,13 +145,13 @@ func (c *Client) CreateDataGroups(ctx context.Context, projectId string, createD
 			Data: bts,
 		})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	//	return 0, errors.Wrap(err, "解析请求结果错误")
 	//}
 	return res.GetCount(), nil
 }
@@ -160,15 +161,15 @@ func (c *Client) ReplaceDataGroup(ctx context.Context, projectId, id string, cre
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataGroupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据错误,%s", err)
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -177,10 +178,10 @@ func (c *Client) ReplaceDataGroup(ctx context.Context, projectId, id string, cre
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -190,15 +191,15 @@ func (c *Client) UpdateDataGroup(ctx context.Context, projectId, id string, crea
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataGroupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据错误,%s", err)
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -207,10 +208,10 @@ func (c *Client) UpdateDataGroup(ctx context.Context, projectId, id string, crea
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -221,7 +222,7 @@ func (c *Client) DeleteDataGroup(ctx context.Context, projectId, id string) erro
 	}
 	cli, err := c.DataServiceClient.GetDataGroupServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -229,10 +230,10 @@ func (c *Client) DeleteDataGroup(ctx context.Context, projectId, id string) erro
 			Id: id,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -243,11 +244,11 @@ func (c *Client) DeleteManyDataGroups(ctx context.Context, projectId string, fil
 	}
 	bts, err := json.Marshal(filter)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDataGroupServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -255,10 +256,10 @@ func (c *Client) DeleteManyDataGroups(ctx context.Context, projectId string, fil
 			Query: bts,
 		})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.GetCount(), nil
 }
@@ -269,23 +270,23 @@ func (c *Client) QueryDataInterface(ctx context.Context, projectId string, query
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDataInterfaceServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetCount(), nil
 }
@@ -295,15 +296,15 @@ func (c *Client) CreateDataInterfaces(ctx context.Context, projectId string, cre
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return 0, errors.NewMsg("插入数据为空")
+		return 0, errors.New("插入数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataInterfaceServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return 0, errors.NewMsg("marshal 插入数据为空")
+		return 0, errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -311,13 +312,13 @@ func (c *Client) CreateDataInterfaces(ctx context.Context, projectId string, cre
 			Data: bts,
 		})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	//	return 0, errors.Wrap(err, "解析请求结果错误")
 	//}
 	return res.GetCount(), nil
 }
@@ -327,15 +328,15 @@ func (c *Client) ReplaceDataInterface(ctx context.Context, projectId, id string,
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataInterfaceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据错误,%s", err)
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -344,10 +345,10 @@ func (c *Client) ReplaceDataInterface(ctx context.Context, projectId, id string,
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -357,15 +358,15 @@ func (c *Client) UpdateDataInterface(ctx context.Context, projectId, id string, 
 		projectId = config.XRequestProjectDefault
 	}
 	if createData == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataInterfaceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(createData)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据错误,%s", err)
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -374,10 +375,10 @@ func (c *Client) UpdateDataInterface(ctx context.Context, projectId, id string, 
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -388,7 +389,7 @@ func (c *Client) DeleteDataInterface(ctx context.Context, projectId, id string) 
 	}
 	cli, err := c.DataServiceClient.GetDataInterfaceServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -396,10 +397,10 @@ func (c *Client) DeleteDataInterface(ctx context.Context, projectId, id string) 
 			Id: id,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -410,11 +411,11 @@ func (c *Client) DeleteManyDataInterfaces(ctx context.Context, projectId string,
 	}
 	bts, err := json.Marshal(filter)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDataInterfaceServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -422,10 +423,10 @@ func (c *Client) DeleteManyDataInterfaces(ctx context.Context, projectId string,
 			Query: bts,
 		})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.GetCount(), nil
 }
@@ -435,61 +436,48 @@ func (c *Client) DataInterfaceProxy(ctx context.Context, projectId, key string, 
 		projectId = config.XRequestProjectDefault
 	}
 	if key == "" {
-		return nil, errors.NewMsg("key为空")
+		return nil, errors.New("key为空")
 	}
 	if data == nil {
-		return nil, errors.NewMsg("请求数据为空")
+		return nil, errors.New("请求数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDataServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return nil, errors.NewMsg("序列化请求数据错误,%s", err)
+		return nil, errors.Wrap(err, "序列化请求数据错误")
 	}
 	res, err := cli.Proxy(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&dataservice.Request{Key: key, Data: bts})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, cErrors.New400Response(int(res.GetCode()), "响应不成功, %s, %s", res.GetInfo(), res.GetDetail())
+		return nil, errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), res.GetInfo())
 	}
 	return &ProxyResult{
 		Code:    res.GetHttpCode(),
 		Headers: res.GetHeaders(),
 		Body:    res.GetResult(),
 	}, nil
-	//if res.GetResult() == nil || len(res.GetResult()) == 0 {
-	//	return res.GetResult(), nil
-	//}
-	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return nil, errors.NewMsg("解析请求结果错误, %s", err)
-	//}
-	//return res.GetResult(), nil
 }
 
 func (c *Client) DatasetViewPreview(ctx context.Context, projectId, mode, datesetId, viewId string, data *QueryParam, result interface{}) ([]byte, error) {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
-	//if mode == "" {
-	//	return nil, errors.NewMsg("mode为空")
-	//}
-	//if datesetId == "" {
-	//	return nil, errors.NewMsg("id为空")
-	//}
 	if data == nil {
-		return nil, errors.NewMsg("请求数据为空")
+		return nil, errors.New("请求数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return nil, errors.NewMsg("序列化请求数据错误,%s", err)
+		return nil, errors.Wrap(err, "序列化请求数据错误")
 	}
 	res, err := cli.Preview(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &dataservice.ViewPreviewReq{
 		DatesetId: datesetId,
@@ -498,16 +486,16 @@ func (c *Client) DatasetViewPreview(ctx context.Context, projectId, mode, datese
 		Data:      bts,
 	})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, cErrors.New400Response(int(res.GetCode()), "响应不成功, %s, %s", res.GetInfo(), res.GetDetail())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -517,15 +505,15 @@ func (c *Client) ReplaceDatasetView(ctx context.Context, projectId, id string, d
 		projectId = config.XRequestProjectDefault
 	}
 	if datasetView == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(datasetView)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据错误,%s", err)
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -534,10 +522,10 @@ func (c *Client) ReplaceDatasetView(ctx context.Context, projectId, id string, d
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -547,15 +535,15 @@ func (c *Client) CreateDatasetView(ctx context.Context, projectId string, datase
 		projectId = config.XRequestProjectDefault
 	}
 	if datasetView == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(datasetView)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -563,13 +551,13 @@ func (c *Client) CreateDatasetView(ctx context.Context, projectId string, datase
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	//	return 0, errors.Wrap(err, "解析请求结果错误")
 	//}
 	return nil
 }
@@ -581,7 +569,7 @@ func (c *Client) DeleteAllDatasetViews(ctx context.Context, projectId string) (i
 	}
 	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	md := dataservice.ContextDataWPw(ctx)
 	md[config.XRequestProject] = projectId
@@ -589,10 +577,10 @@ func (c *Client) DeleteAllDatasetViews(ctx context.Context, projectId string) (i
 		apicontext.GetGrpcContext(ctx, md),
 		&api.QueryRequest{})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.GetCount(), nil
 }
@@ -603,23 +591,23 @@ func (c *Client) QueryDatasetView(ctx context.Context, projectId string, query, 
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDatasetViewServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetCount(), nil
 }
@@ -636,15 +624,15 @@ func (c *Client) DatasetPreview(ctx context.Context, projectId, mode, datesetId 
 	//	return nil, errors.NewMsg("id为空")
 	//}
 	if data == nil {
-		return nil, errors.NewMsg("请求数据为空")
+		return nil, errors.New("请求数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDatasetServiceClient()
 	if err != nil {
-		return nil, errors.NewMsg("获取客户端错误,%s", err)
+		return nil, err
 	}
 	bts, err := json.Marshal(data)
 	if err != nil {
-		return nil, errors.NewMsg("序列化请求数据错误,%s", err)
+		return nil, errors.Wrap(err, "序列化请求数据错误")
 	}
 	res, err := cli.Preview(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &dataservice.ViewPreviewReq{
 		DatesetId: datesetId,
@@ -653,16 +641,16 @@ func (c *Client) DatasetPreview(ctx context.Context, projectId, mode, datesetId 
 		Data:      bts,
 	})
 	if err != nil {
-		return nil, errors.NewMsg("请求错误, %s", err)
+		return nil, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return nil, cErrors.New400Response(int(res.GetCode()), "响应不成功, %s, %s", res.GetInfo(), res.GetDetail())
+		return nil, internalError.ParseResponse(res)
 	}
 	if result == nil {
 		return res.GetResult(), nil
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.NewMsg("解析请求结果错误, %s", err)
+		return nil, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetResult(), nil
 }
@@ -672,15 +660,15 @@ func (c *Client) ReplaceDatasetWhole(ctx context.Context, projectId, id string, 
 		projectId = config.XRequestProjectDefault
 	}
 	if datasetWhole == nil {
-		return errors.NewMsg("更新数据为空")
+		return errors.New("更新数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDatasetServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(datasetWhole)
 	if err != nil {
-		return errors.NewMsg("marshal 更新数据错误,%s", err)
+		return errors.Wrap(err, "序列化更新数据错误")
 	}
 	res, err := cli.ReplaceWhole(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -689,10 +677,10 @@ func (c *Client) ReplaceDatasetWhole(ctx context.Context, projectId, id string, 
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	return nil
 }
@@ -702,15 +690,15 @@ func (c *Client) CreateDatasetWhole(ctx context.Context, projectId string, datas
 		projectId = config.XRequestProjectDefault
 	}
 	if datasetWhole == nil {
-		return errors.NewMsg("插入数据为空")
+		return errors.New("插入数据为空")
 	}
 	cli, err := c.DataServiceClient.GetDatasetServiceClient()
 	if err != nil {
-		return errors.NewMsg("获取客户端错误,%s", err)
+		return err
 	}
 	bts, err := json.Marshal(datasetWhole)
 	if err != nil {
-		return errors.NewMsg("marshal 插入数据为空")
+		return errors.Wrap(err, "序列化插入数据错误")
 	}
 	res, err := cli.CreateWhole(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
@@ -718,13 +706,13 @@ func (c *Client) CreateDatasetWhole(ctx context.Context, projectId string, datas
 			Data: bts,
 		})
 	if err != nil {
-		return errors.NewMsg("请求错误, %s", err)
+		return errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return internalError.ParseResponse(res)
 	}
 	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return 0, errors.NewMsg("解析请求结果错误, %s", err)
+	//	return 0, errors.Wrap(err, "解析请求结果错误")
 	//}
 	return nil
 }
@@ -736,7 +724,7 @@ func (c *Client) DeleteAllDatasets(ctx context.Context, projectId string) (int64
 	}
 	cli, err := c.DataServiceClient.GetDatasetServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	md := dataservice.ContextDataWPw(ctx)
 	md[config.XRequestProject] = projectId
@@ -744,10 +732,10 @@ func (c *Client) DeleteAllDatasets(ctx context.Context, projectId string) (int64
 		apicontext.GetGrpcContext(ctx, md),
 		&api.QueryRequest{})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	return res.GetCount(), nil
 }
@@ -759,23 +747,23 @@ func (c *Client) QueryDataset(ctx context.Context, projectId string, query, resu
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDatasetServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetCount(), nil
 }
@@ -787,25 +775,25 @@ func (c *Client) QueryDatasetWhole(ctx context.Context, projectId string, query,
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return 0, errors.NewMsg("序列化查询参数为空, %s", err)
+		return 0, errors.Wrap(err, "序列化查询参数错误")
 	}
 	cli, err := c.DataServiceClient.GetDatasetServiceClient()
 	if err != nil {
-		return 0, errors.NewMsg("获取客户端错误,%s", err)
+		return 0, err
 	}
 	res, err := cli.QueryWhole(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if err != nil {
-		return 0, errors.NewMsg("请求错误, %s", err)
+		return 0, errors.Wrap(err, "请求错误")
 	}
 	if !res.GetStatus() {
-		return 0, cErrors.Wrap400Response(err, int(res.GetCode()), "响应不成功, %s", res.GetDetail())
+		return 0, internalError.ParseResponse(res)
 	}
 	d := json.NewDecoder(bytes.NewBuffer(res.GetResult()))
 	d.UseNumber()
 	if err := d.Decode(&result); err != nil {
-		return 0, errors.NewMsg("解析请求结果错误, %s", err)
+		return 0, errors.Wrap(err, "解析请求结果错误")
 	}
 	return res.GetCount(), nil
 }

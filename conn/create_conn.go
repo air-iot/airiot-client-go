@@ -7,6 +7,7 @@ import (
 	netHttp "net/http"
 	"time"
 
+	"github.com/air-iot/errors"
 	"github.com/air-iot/logger"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/middleware"
@@ -17,7 +18,7 @@ import (
 	ggrpc "google.golang.org/grpc"
 
 	"github.com/air-iot/api-client-go/v4/config"
-	"github.com/air-iot/api-client-go/v4/errors"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/api-client-go/v4/filter"
 )
 
@@ -36,7 +37,7 @@ func CreateConn(serviceName string, cfg config.Config, r *etcd.Registry, opts ..
 	}
 	opts = append(opts, ggrpc.WithDefaultCallOptions(ggrpc.MaxCallRecvMsgSize(cfg.Limit*1024*1024), ggrpc.MaxCallSendMsgSize(cfg.Limit*1024*1024)))
 	logger.Infof("grpc create conn,serviceName: %s config: %+v", serviceName, cfg)
-	return grpc.DialInsecure(
+	cli, err := grpc.DialInsecure(
 		context.Background(),
 		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", serviceName)),
 		grpc.WithDiscovery(r),
@@ -49,6 +50,10 @@ func CreateConn(serviceName string, cfg config.Config, r *etcd.Registry, opts ..
 		grpc.WithNodeFilter(filter.Metadata(metadataTmp)),
 		grpc.WithTimeout(time.Second*time.Duration(cfg.Timeout)),
 	)
+	if err != nil {
+		return nil, errors.Wrap(err, "grpc.Dial err")
+	}
+	return cli, nil
 }
 
 func CreateRestConn(serviceName string, cfg config.Config, r *etcd.Registry, middlewares ...middleware.Middleware) (*http.Client, error) {
@@ -62,7 +67,7 @@ func CreateRestConn(serviceName string, cfg config.Config, r *etcd.Registry, mid
 		cfg.Timeout = 60
 	}
 	logger.Infof("http create conn,serviceName: %s config: %+v", serviceName, cfg)
-	return http.NewClient(
+	cli, err := http.NewClient(
 		context.Background(),
 		http.WithEndpoint(fmt.Sprintf("discovery:///%s", serviceName)),
 		http.WithDiscovery(r),
@@ -82,11 +87,16 @@ func CreateRestConn(serviceName string, cfg config.Config, r *etcd.Registry, mid
 			}(res.Body)
 			data, err := io.ReadAll(res.Body)
 			if err == nil {
-				return errors.ParseBody(res.StatusCode, data)
+				return internalError.ParseBody(res.StatusCode, data)
 			}
-			return errors.NewMsg("未知原因,解析响应错误,%v", err)
+			return errors.Wrap(err, "未知原因,解析响应错误")
 		}),
 		http.WithNodeFilter(filter.Metadata(metadataTmp)),
 		http.WithTimeout(time.Second*time.Duration(cfg.Timeout)),
 	)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "create http client err")
+	}
+	return cli, nil
 }

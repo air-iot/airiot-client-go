@@ -2,15 +2,16 @@ package auth
 
 import (
 	"context"
-	context2 "github.com/air-iot/api-client-go/v4/apicontext"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/air-iot/api-client-go/v4/api"
+	context2 "github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/core"
-	"github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/api-client-go/v4/spm"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
 
@@ -48,35 +49,35 @@ func (a *Client) getToken() (*Token, error) {
 	case config.Tenant:
 		cli, err := a.spmClient.GetUserServiceClient()
 		if err != nil {
-			return nil, errors.NewMsg("获取token客户端错误,%s", err)
+			return nil, errors.Wrap(err, "获取token客户端错误")
 		}
 		res, err := cli.GetToken(context.Background(), &api.TokenRequest{Ak: a.cfg.AK, Sk: a.cfg.SK})
 		if err != nil {
-			return nil, errors.NewMsg("请求token错误, %s", err)
+			return nil, errors.Wrap(err, "请求token错误")
 		}
 		if !res.GetStatus() {
-			return nil, errors.NewMsg("响应token不成功, %s %s", res.GetInfo(), res.GetDetail())
+			return nil, errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), "请求token响应错误: %s", res.GetInfo())
 		}
 		if err := json.Unmarshal(res.GetResult(), &authToken); err != nil {
-			return nil, errors.NewMsg("解析 token 请求结果错误, %s", err)
+			return nil, errors.Wrap(err, "解析 token 请求结果错误")
 		}
 	case config.Project:
 		cli, err := a.coreClient.GetAppServiceClient()
 		if err != nil {
-			return nil, errors.NewMsg("获取token客户端错误,%s", err)
+			return nil, errors.Wrap(err, "获取token客户端错误")
 		}
 		res, err := cli.GetToken(context2.GetGrpcContext(context.Background(), map[string]string{config.XRequestProject: a.cfg.ProjectId}), &api.TokenRequest{Ak: a.cfg.AK, Sk: a.cfg.SK})
 		if err != nil {
-			return nil, errors.NewMsg("请求token错误, %s", err)
+			return nil, errors.Wrap(err, "请求token错误")
 		}
 		if !res.GetStatus() {
-			return nil, errors.NewMsg("响应token不成功, %s %s", res.GetInfo(), res.GetDetail())
+			return nil, errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), "请求token响应错误: %s", res.GetInfo())
 		}
 		if err := json.Unmarshal(res.GetResult(), &authToken); err != nil {
-			return nil, errors.NewMsg("解析 token 请求结果错误, %s", err)
+			return nil, errors.Wrap(err, "解析 token 请求结果错误")
 		}
 	default:
-		return nil, errors.NewMsg("未知ak、sk类型")
+		return nil, errors.New("未知ak、sk类型")
 	}
 	a.authToken = authToken
 	a.hasToken = true

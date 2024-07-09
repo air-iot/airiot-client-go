@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/air-iot/api-client-go/v4/config"
-	"github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -16,7 +16,7 @@ type MetaData struct {
 func GetMetaData(ctx context.Context) (*MetaData, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.NewMsg("无法获取元数据")
+		return nil, errors.New("无法获取元数据")
 	}
 	res := new(MetaData)
 	tokenHeaders := md.Get(config.XRequestHeaderAuthorization)

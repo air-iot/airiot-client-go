@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/json"
 
 	"github.com/air-iot/errors"
@@ -27,27 +28,27 @@ import (
 //	return r.Message
 //}
 
-func NewError(err error) error {
-	res := &errors.ResponseError{
-		ERR: errors.WithStack(err),
-	}
-	return res
-}
+//func NewError(err error) error {
+//	res := &errors.ResponseError{
+//		ERR: errors.WithStack(err),
+//	}
+//	return res
+//}
 
-func NewMsg(msg string, args ...interface{}) error {
-	res := &errors.ResponseError{
-		Message: fmt.Sprintf(msg, args...),
-	}
-	return res
-}
+//func NewMsg(msg string, args ...interface{}) error {
+//	res := &errors.ResponseError{
+//		Message: fmt.Sprintf(msg, args...),
+//	}
+//	return res
+//}
 
-func NewErrorMsg(err error, msg string, args ...interface{}) error {
-	res := &errors.ResponseError{
-		ERR:     err,
-		Message: fmt.Sprintf(msg, args...),
-	}
-	return res
-}
+//func NewErrorMsg(err error, msg string, args ...interface{}) error {
+//	res := &errors.ResponseError{
+//		ERR:     err,
+//		Message: fmt.Sprintf(msg, args...),
+//	}
+//	return res
+//}
 
 // UnWrapResponse 解包响应错误
 func UnWrapResponse(err error) *errors.ResponseError {
@@ -66,4 +67,8 @@ func ParseBody(statusCode int, body []byte) error {
 	}
 	res.StatusCode = statusCode
 	return res
+}
+
+func ParseResponse(res *api.Response) error {
+	return errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), res.GetInfo())
 }

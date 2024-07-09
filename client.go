@@ -2,7 +2,6 @@ package api_client_go
 
 import (
 	"fmt"
-	"github.com/air-iot/api-client-go/v4/sync"
 	"log"
 
 	"dario.cat/mergo"
@@ -19,7 +18,9 @@ import (
 	"github.com/air-iot/api-client-go/v4/live"
 	"github.com/air-iot/api-client-go/v4/report"
 	"github.com/air-iot/api-client-go/v4/spm"
+	"github.com/air-iot/api-client-go/v4/sync"
 	"github.com/air-iot/api-client-go/v4/warning"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 	etcdConfig "github.com/go-kratos/kratos/contrib/config/etcd/v2"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
@@ -67,26 +68,26 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 		}
 	}()
 	if err := c2.Load(); err != nil {
-		return nil, nil, fmt.Errorf("加载配置中心错误, %w", err)
+		return nil, nil, errors.Wrap(err, "加载配置中心错误")
 	}
 	var c2m map[string]interface{}
 	if err := c2.Scan(&c2m); err != nil {
-		return nil, nil, fmt.Errorf("配置解析错误, %w", err)
+		return nil, nil, errors.Wrap(err, "配置解析错误")
 	}
 	if err := viper.MergeConfigMap(c2m); err != nil {
-		return nil, nil, fmt.Errorf("合并配置错误, %w", err)
+		return nil, nil, errors.Wrap(err, "合并配置错误")
 	}
 	cfgApi := viper.GetStringMap("App.API")
 	if cfgApi != nil && len(cfgApi) > 0 {
 		var paramMap map[string]interface{}
 		if err := json.CopyByJson(&paramMap, cfg); err != nil {
-			return nil, nil, fmt.Errorf("复制配置错误, %w", err)
+			return nil, nil, errors.Wrap(err, "复制配置错误")
 		}
 		if err := mergo.Map(&paramMap, cfgApi); err != nil {
-			return nil, nil, fmt.Errorf("合并配置错误, %w", err)
+			return nil, nil, errors.Wrap(err, "合并配置错误")
 		}
 		if err := json.CopyByJson(&cfg, paramMap); err != nil {
-			return nil, nil, fmt.Errorf("复制结构配置错误, %w", err)
+			return nil, nil, errors.Wrap(err, "复制结构配置错误")
 		}
 	}
 	if cfg.Timeout == 0 {

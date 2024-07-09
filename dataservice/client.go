@@ -5,7 +5,7 @@ import (
 
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/conn"
-	"github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/logger"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/middleware"
@@ -68,7 +68,7 @@ func (c *Client) createConn() error {
 	logger.Infof("%s grpc client cc, %+v", serviceName, c.config)
 	cc, err := conn.CreateConn(serviceName, c.config, c.registry, c.opts...)
 	if err != nil {
-		return errors.NewMsg("grpc.Dial error: %s", err)
+		return err
 	}
 	c.dataServiceClient = NewDataServiceClient(cc)
 	c.dataGroupServiceClient = NewDataGroupServiceClient(cc)
@@ -88,7 +88,7 @@ func (c *Client) createRestConn() error {
 	logger.Infof("%s http client createConn, %+v", serviceName, c.config)
 	cc, err := conn.CreateRestConn(serviceName, c.config, c.registry, c.middlewares...)
 	if err != nil {
-		return errors.NewMsg("rest error: %s", err)
+		return err
 	}
 	c.restClient = cc
 	return nil
@@ -110,7 +110,7 @@ func (c *Client) GetDataServiceClient() (DataServiceClient, error) {
 		}
 	}
 	if c.dataServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.dataServiceClient, nil
 }
@@ -122,7 +122,7 @@ func (c *Client) GetDataGroupServiceClient() (DataGroupServiceClient, error) {
 		}
 	}
 	if c.dataGroupServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.dataGroupServiceClient, nil
 }
@@ -134,7 +134,7 @@ func (c *Client) GetDataInterfaceServiceClient() (DataInterfaceServiceClient, er
 		}
 	}
 	if c.dataInterfaceServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.dataInterfaceServiceClient, nil
 }
@@ -146,7 +146,7 @@ func (c *Client) GetDatasetViewServiceClient() (DatasetViewServiceClient, error)
 		}
 	}
 	if c.datasetViewServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.datasetViewServiceClient, nil
 }
@@ -158,7 +158,7 @@ func (c *Client) GetDatasetServiceClient() (DatasetServiceClient, error) {
 		}
 	}
 	if c.datasetServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.datasetServiceClient, nil
 }

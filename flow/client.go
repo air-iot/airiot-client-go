@@ -5,7 +5,7 @@ import (
 
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/conn"
-	"github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/logger"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/middleware"
@@ -66,7 +66,7 @@ func (c *Client) createConn() error {
 	logger.Infof("%s grpc client cc, %+v", serviceName, c.config)
 	cc, err := conn.CreateConn(serviceName, c.config, c.registry, c.opts...)
 	if err != nil {
-		return errors.NewMsg("grpc.Dial error: %s", err)
+		return err
 	}
 	c.flowTaskClient = NewFlowTaskServiceClient(cc)
 	c.flowClient = NewFlowServiceClient(cc)
@@ -84,7 +84,7 @@ func (c *Client) createRestConn() error {
 	logger.Infof("%s http client createConn, %+v", serviceName, c.config)
 	cc, err := conn.CreateRestConn(serviceName, c.config, c.registry, c.middlewares...)
 	if err != nil {
-		return errors.NewMsg("rest error: %s", err)
+		return err
 	}
 	c.restClient = cc
 	return nil
@@ -106,7 +106,7 @@ func (c *Client) GetFlowServiceClient() (FlowServiceClient, error) {
 		}
 	}
 	if c.flowClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.flowClient, nil
 }
@@ -118,7 +118,7 @@ func (c *Client) GetFlowTaskServiceClient() (FlowTaskServiceClient, error) {
 		}
 	}
 	if c.flowTaskClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.flowTaskClient, nil
 }
@@ -130,7 +130,7 @@ func (c *Client) GetFlowTriggerRecordServiceClient() (FlowTriggerRecordServiceCl
 		}
 	}
 	if c.flowTriggerRecordServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.flowTriggerRecordServiceClient, nil
 }

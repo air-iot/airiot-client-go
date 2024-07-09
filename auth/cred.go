@@ -6,7 +6,7 @@ import (
 
 	"github.com/air-iot/api-client-go/v4/apitransport"
 	"github.com/air-iot/api-client-go/v4/config"
-	"github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 	"google.golang.org/grpc/credentials"
@@ -35,7 +35,7 @@ func (c *CustomCredential) HttpToken() middleware.Middleware {
 		return func(ctx context.Context, req interface{}) (reply interface{}, err error) {
 			transporter, ok := transport.FromClientContext(ctx)
 			if !ok {
-				return nil, errors.NewMsg("客户端上下文错误")
+				return nil, errors.New("客户端上下文错误")
 			}
 			tt, ok := apitransport.FromClientContext(ctx)
 			if ok {
@@ -63,7 +63,7 @@ func (c *CustomCredential) GetRequestMetadata(ctx context.Context, uri ...string
 	//_, _ = info, ok
 	//pr, ok := transport.FromClientContext(ctx)
 	if !ok {
-		return nil, errors.NewMsg("客户端上下文错误")
+		return nil, errors.New("客户端上下文错误")
 	}
 	//path := pr.Operation()
 	path := info.Method

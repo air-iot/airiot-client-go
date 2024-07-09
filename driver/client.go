@@ -1,11 +1,11 @@
 package driver
 
 import (
+	"github.com/air-iot/errors"
 	"sync"
 
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/conn"
-	"github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/logger"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/middleware"
@@ -68,7 +68,7 @@ func (c *Client) createConn() error {
 	logger.Infof("%s grpc client cc, %+v", serviceName, c.config)
 	cc, err := conn.CreateConn(serviceName, c.config, c.registry, c.opts...)
 	if err != nil {
-		return errors.NewMsg("grpc.Dial error: %s", err)
+		return err
 	}
 	c.driverClient = NewDriverServiceClient(cc)
 	c.driverInstanceServiceClient = NewDriverInstanceServiceClient(cc)
@@ -88,7 +88,7 @@ func (c *Client) createRestConn() error {
 	logger.Infof("%s http client createConn, %+v", serviceName, c.config)
 	cc, err := conn.CreateRestConn(serviceName, c.config, c.registry, c.middlewares...)
 	if err != nil {
-		return errors.NewMsg("rest error: %s", err)
+		return err
 	}
 	c.restClient = cc
 	return nil
@@ -110,7 +110,7 @@ func (c *Client) GetDriverServiceClient() (DriverServiceClient, error) {
 		}
 	}
 	if c.driverClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.driverClient, nil
 }
@@ -122,7 +122,7 @@ func (c *Client) GetDriverInstanceServiceClient() (DriverInstanceServiceClient, 
 		}
 	}
 	if c.driverInstanceServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.driverInstanceServiceClient, nil
 }
@@ -134,7 +134,7 @@ func (c *Client) GetDriverEventCronServiceClient() (DriverEventCronServiceClient
 		}
 	}
 	if c.driverEventCronServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.driverEventCronServiceClient, nil
 }
@@ -146,7 +146,7 @@ func (c *Client) GetDriverInstructCronServiceClient() (DriverEventCronServiceCli
 		}
 	}
 	if c.driverInstructCronServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.driverInstructCronServiceClient, nil
 }
@@ -158,7 +158,7 @@ func (c *Client) GetDriverInstructServiceClient() (DriverInstructServiceClient, 
 		}
 	}
 	if c.driverInstructServiceClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.driverInstructServiceClient, nil
 }

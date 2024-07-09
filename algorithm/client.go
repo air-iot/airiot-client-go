@@ -1,15 +1,16 @@
 package algorithm
 
 import (
+	"sync"
+
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/conn"
-	"github.com/air-iot/api-client-go/v4/errors"
+	"github.com/air-iot/errors"
 	"github.com/air-iot/logger"
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"google.golang.org/grpc"
-	"sync"
 )
 
 const serviceName = "algorithm"
@@ -64,7 +65,7 @@ func (c *Client) createConn() error {
 	logger.Infof("%s grpc client cc, %+v", serviceName, c.config)
 	cc, err := conn.CreateConn(serviceName, c.config, c.registry, c.opts...)
 	if err != nil {
-		return errors.NewMsg("grpc.Dial error: %s", err)
+		return err
 	}
 	c.AlgorithmClient = NewAlgorithmServiceClient(cc)
 	c.LocalAlgorithmClient = NewLocalAlgorithmServiceClient(cc)
@@ -81,7 +82,7 @@ func (c *Client) createRestConn() error {
 	logger.Infof("%s http client createConn, %+v", serviceName, c.config)
 	cc, err := conn.CreateRestConn(serviceName, c.config, c.registry, c.middlewares...)
 	if err != nil {
-		return errors.NewMsg("rest error: %s", err)
+		return err
 	}
 	c.restClient = cc
 	return nil
@@ -103,7 +104,7 @@ func (c *Client) GetAlgorithmServiceClient() (AlgorithmServiceClient, error) {
 		}
 	}
 	if c.AlgorithmClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.AlgorithmClient, nil
 }
@@ -115,7 +116,7 @@ func (c *Client) GetLocalAlgorithmClient() (LocalAlgorithmServiceClient, error) 
 		}
 	}
 	if c.LocalAlgorithmClient == nil {
-		return nil, errors.NewMsg("客户端是空")
+		return nil, errors.New("客户端是空")
 	}
 	return c.LocalAlgorithmClient, nil
 }
