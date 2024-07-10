@@ -7,7 +7,6 @@ import (
 	"github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/engine"
-	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
@@ -59,7 +58,7 @@ func (c *Client) Run(ctx context.Context, projectId, flowConfig string, elementB
 		result = &engine.RunResponse{Job: res.Job}
 	}
 	if err != nil {
-		return result, errors.Wrap(err, "流程执行错误")
+		return result, errors.NewResErrorMsg(err, "流程执行错误")
 	}
 	return result, nil
 }
@@ -79,7 +78,7 @@ func (c *Client) Resume(ctx context.Context, projectId, jobId, elementId string,
 		ElementId: elementId,
 		Variables: b,
 	}); err != nil {
-		return errors.Wrap(err, "流程执行错误")
+		return errors.NewResErrorMsg(err, "流程执行错误")
 	}
 	return nil
 }
@@ -95,7 +94,7 @@ func (c *Client) Fail(ctx context.Context, projectId, jobId, elementId, errMessa
 		ElementId:    elementId,
 		ErrorMessage: errMessage,
 	}); err != nil {
-		return errors.Wrap(err, "流程执行错误")
+		return errors.NewResErrorMsg(err, "流程执行错误")
 	}
 	return nil
 }
@@ -115,14 +114,8 @@ func (c *Client) QueryFlowJobCron(ctx context.Context, projectId string, query, 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -141,19 +134,7 @@ func (c *Client) GetFlowJobCron(ctx context.Context, projectId, id string, resul
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteFlowJobCron(ctx context.Context, projectId, id string) error {
@@ -170,11 +151,8 @@ func (c *Client) DeleteFlowJobCron(ctx context.Context, projectId, id string) er
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -202,11 +180,8 @@ func (c *Client) UpdateFlowJobCron(ctx context.Context, projectId, id string, up
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -232,11 +207,8 @@ func (c *Client) ReplaceFlowJobCron(ctx context.Context, projectId, id string, u
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -259,14 +231,8 @@ func (c *Client) CreateFlowJobCron(ctx context.Context, projectId string, create
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -289,14 +255,8 @@ func (c *Client) CreateManyFlowJobCron(ctx context.Context, projectId string, cr
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -316,13 +276,10 @@ func (c *Client) DeleteManyFlowJobCron(ctx context.Context, projectId string, qu
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	return res.Count, nil
+	return res.GetCount(), nil
 }
 
 func (c *Client) QueryFlowLogCron(ctx context.Context, projectId string, query, result interface{}) error {
@@ -340,14 +297,8 @@ func (c *Client) QueryFlowLogCron(ctx context.Context, projectId string, query, 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -366,19 +317,7 @@ func (c *Client) GetFlowLogCron(ctx context.Context, projectId, id string, resul
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteFlowLogCron(ctx context.Context, projectId, id string) error {
@@ -395,11 +334,8 @@ func (c *Client) DeleteFlowLogCron(ctx context.Context, projectId, id string) er
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -427,11 +363,8 @@ func (c *Client) UpdateFlowLogCron(ctx context.Context, projectId, id string, up
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -454,14 +387,8 @@ func (c *Client) CreateFlowLogCron(ctx context.Context, projectId string, create
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -484,14 +411,8 @@ func (c *Client) CreateManyFlowLogCron(ctx context.Context, projectId string, cr
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -511,11 +432,8 @@ func (c *Client) DeleteManyFlowLogCron(ctx context.Context, projectId string, qu
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	return res.Count, nil
+	return res.GetCount(), nil
 }

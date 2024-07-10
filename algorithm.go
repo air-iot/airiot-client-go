@@ -8,10 +8,8 @@ import (
 	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
-	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
-	"github.com/air-iot/logger"
 )
 
 // AlgorithmRunById 算法执行
@@ -39,15 +37,7 @@ func (c *Client) AlgorithmRunById(ctx context.Context, projectId, id string, dat
 			Id:   id,
 			Data: bts,
 		})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		logger.Errorf("算法服务grpc响应错误: %+v", res)
-		return nil, internalError.ParseResponse(res)
-	}
-
-	return res.GetResult(), nil
+	return parseRes(err, res, nil)
 }
 
 func (c *Client) QueryLocalAlgorithm(ctx context.Context, projectId string, query, result interface{}) error {
@@ -65,16 +55,8 @@ func (c *Client) QueryLocalAlgorithm(ctx context.Context, projectId string, quer
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if result != nil {
-		if err := json.Unmarshal(res.GetResult(), result); err != nil {
-			return errors.Wrap(err, "解析请求结果错误")
-		}
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -93,19 +75,7 @@ func (c *Client) GetLocalAlgorithm(ctx context.Context, projectId, id string, re
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteLocalAlgorithm(ctx context.Context, projectId, id string) error {
@@ -122,11 +92,8 @@ func (c *Client) DeleteLocalAlgorithm(ctx context.Context, projectId, id string)
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -154,11 +121,8 @@ func (c *Client) UpdateLocalAlgorithm(ctx context.Context, projectId, id string,
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -184,11 +148,8 @@ func (c *Client) ReplaceLocalAlgorithm(ctx context.Context, projectId, id string
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -211,14 +172,8 @@ func (c *Client) CreateLocalAlgorithm(ctx context.Context, projectId string, cre
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -241,14 +196,8 @@ func (c *Client) CreateManyLocalAlgorithm(ctx context.Context, projectId string,
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -268,11 +217,8 @@ func (c *Client) DeleteManyLocalAlgorithm(ctx context.Context, projectId string,
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
 	return res.Count, nil
 }

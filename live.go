@@ -6,7 +6,6 @@ import (
 	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
-	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
@@ -29,13 +28,10 @@ func (c *Client) RtspPull(ctx context.Context, projectId string, createData inte
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
+	result, err := parseRes(err, res, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "请求错误")
+		return "", err
 	}
-	if !res.GetStatus() {
-		return "", internalError.ParseResponse(res)
-	}
-	result := res.GetResult()
 	if result != nil || string(result) == "" {
 		return string(result), nil
 	} else {

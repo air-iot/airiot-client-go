@@ -112,14 +112,8 @@ func (c *Client) QueryDataGroup(ctx context.Context, projectId string, query, re
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -144,16 +138,13 @@ func (c *Client) CreateDataGroups(ctx context.Context, projectId string, createD
 		&api.CreateRequest{
 			Data: bts,
 		})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
+	return res.GetCount(), nil
 	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
 	//	return 0, errors.Wrap(err, "解析请求结果错误")
 	//}
-	return res.GetCount(), nil
 }
 
 func (c *Client) ReplaceDataGroup(ctx context.Context, projectId, id string, createData interface{}) error {
@@ -177,11 +168,8 @@ func (c *Client) ReplaceDataGroup(ctx context.Context, projectId, id string, cre
 			Id:   id,
 			Data: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -207,11 +195,8 @@ func (c *Client) UpdateDataGroup(ctx context.Context, projectId, id string, crea
 			Id:   id,
 			Data: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -229,11 +214,8 @@ func (c *Client) DeleteDataGroup(ctx context.Context, projectId, id string) erro
 		&api.GetOrDeleteRequest{
 			Id: id,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -255,11 +237,8 @@ func (c *Client) DeleteManyDataGroups(ctx context.Context, projectId string, fil
 		&api.QueryRequest{
 			Query: bts,
 		})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -279,14 +258,9 @@ func (c *Client) QueryDataInterface(ctx context.Context, projectId string, query
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
+
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -311,15 +285,9 @@ func (c *Client) CreateDataInterfaces(ctx context.Context, projectId string, cre
 		&api.CreateRequest{
 			Data: bts,
 		})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	//if err := json.Unmarshal(res.GetResult(), result); err != nil {
-	//	return 0, errors.Wrap(err, "解析请求结果错误")
-	//}
 	return res.GetCount(), nil
 }
 
@@ -344,11 +312,8 @@ func (c *Client) ReplaceDataInterface(ctx context.Context, projectId, id string,
 			Id:   id,
 			Data: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -374,11 +339,8 @@ func (c *Client) UpdateDataInterface(ctx context.Context, projectId, id string, 
 			Id:   id,
 			Data: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -396,11 +358,8 @@ func (c *Client) DeleteDataInterface(ctx context.Context, projectId, id string) 
 		&api.GetOrDeleteRequest{
 			Id: id,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -422,11 +381,8 @@ func (c *Client) DeleteManyDataInterfaces(ctx context.Context, projectId string,
 		&api.QueryRequest{
 			Query: bts,
 		})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -452,7 +408,7 @@ func (c *Client) DataInterfaceProxy(ctx context.Context, projectId, key string, 
 	res, err := cli.Proxy(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&dataservice.Request{Key: key, Data: bts})
 	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
+		return nil, errors.NewResErrorMsg(err, "请求错误")
 	}
 	if !res.GetStatus() {
 		return nil, errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), res.GetInfo())

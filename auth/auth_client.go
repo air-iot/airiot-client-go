@@ -53,7 +53,7 @@ func (a *Client) getToken() (*Token, error) {
 		}
 		res, err := cli.GetToken(context.Background(), &api.TokenRequest{Ak: a.cfg.AK, Sk: a.cfg.SK})
 		if err != nil {
-			return nil, errors.Wrap(err, "请求token错误")
+			return nil, errors.NewResErrorMsg(err, "请求token错误")
 		}
 		if !res.GetStatus() {
 			return nil, errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), "请求token响应错误: %s", res.GetInfo())
@@ -68,7 +68,7 @@ func (a *Client) getToken() (*Token, error) {
 		}
 		res, err := cli.GetToken(context2.GetGrpcContext(context.Background(), map[string]string{config.XRequestProject: a.cfg.ProjectId}), &api.TokenRequest{Ak: a.cfg.AK, Sk: a.cfg.SK})
 		if err != nil {
-			return nil, errors.Wrap(err, "请求token错误")
+			return nil, errors.NewResErrorMsg(err, "请求token错误")
 		}
 		if !res.GetStatus() {
 			return nil, errors.Wrap400Response(fmt.Errorf(res.GetDetail()), int(res.GetCode()), "请求token响应错误: %s", res.GetInfo())

@@ -12,7 +12,6 @@ import (
 	"github.com/air-iot/api-client-go/v4/apitransport"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/core"
-	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 	"github.com/air-iot/logger"
@@ -24,14 +23,8 @@ func (c *Client) GetFileLicense(ctx context.Context, result interface{}) error {
 		return err
 	}
 	res, err := cli.GetFileLicense(ctx, &api.QueryRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -42,14 +35,8 @@ func (c *Client) UseLicense(ctx context.Context, projectId string, result interf
 		return err
 	}
 	res, err := cli.UseLicense(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &api.QueryRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -65,7 +52,7 @@ func (c *Client) UploadLicense(ctx context.Context, projectId, filename string, 
 	}
 	stream, err := cli.UploadLicense(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, "filename": filename}))
 	if err != nil {
-		return errors.Wrap(err, "请求错误")
+		return errors.NewResErrorMsg(err, "请求错误")
 	}
 
 	//defer stream.CloseAndRecv()
@@ -117,14 +104,8 @@ func (c *Client) GetDriverLicense(ctx context.Context, projectId, driverId strin
 	res, err := cli.GetDriverLicense(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}), &api.GetOrDeleteRequest{
 		Id: driverId,
 	})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -135,14 +116,8 @@ func (c *Client) FindMachineCode(ctx context.Context, result interface{}) error 
 		return err
 	}
 	res, err := cli.FindMachineCode(ctx, &api.QueryRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -161,14 +136,8 @@ func (c *Client) GetCurrentUserInfo(ctx context.Context, projectId, token string
 	res, err := cli.GetCurrentUserInfo(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&core.LoginUserRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -194,14 +163,8 @@ func (c *Client) UserPermissionUpdate(ctx context.Context, projectId, token stri
 	res, err := cli.UserPermissionUpdate(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -221,14 +184,8 @@ func (c *Client) QueryUser(ctx context.Context, projectId string, query, result 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -248,14 +205,8 @@ func (c *Client) QueryUserBackup(ctx context.Context, projectId string, query, r
 	res, err := cli.QueryBackup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -275,14 +226,8 @@ func (c *Client) DeleteManyUserBackup(ctx context.Context, projectId string, que
 	res, err := cli.DeleteManyBackup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -307,14 +252,8 @@ func (c *Client) CreateManyUserBackup(ctx context.Context, projectId string, cre
 		&api.CreateRequest{
 			Data: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -333,19 +272,7 @@ func (c *Client) GetUser(ctx context.Context, projectId, id string, result inter
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteUser(ctx context.Context, projectId, id string, result interface{}) error {
@@ -363,14 +290,8 @@ func (c *Client) DeleteUser(ctx context.Context, projectId, id string, result in
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -398,14 +319,8 @@ func (c *Client) UpdateUser(ctx context.Context, projectId, id string, updateDat
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -431,14 +346,8 @@ func (c *Client) ReplaceUser(ctx context.Context, projectId, id string, updateDa
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -462,14 +371,8 @@ func (c *Client) CreateLog(ctx context.Context, projectId string, createData, re
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -492,14 +395,8 @@ func (c *Client) CreateUser(ctx context.Context, projectId string, createData, r
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -519,14 +416,8 @@ func (c *Client) StatsQuery(ctx context.Context, projectId string, query, result
 	res, err := cli.StatsQuery(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -546,14 +437,8 @@ func (c *Client) QueryTableSchema(ctx context.Context, projectId string, query, 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -577,7 +462,7 @@ func (c *Client) RestQueryTableSchema(ctx context.Context, projectId string, que
 		return err
 	}
 	if err := cli.Invoke(apitransport.NewClientContext(ctx, &apitransport.Transport{ReqHeader: map[string]string{config.XRequestProject: projectId}}), netHttp.MethodGet, u.RequestURI(), map[string]interface{}{}, result); err != nil {
-		return err
+		return errors.NewResError(err)
 	}
 	return nil
 }
@@ -596,14 +481,8 @@ func (c *Client) QueryTableSchemaDeviceByDriverAndGroup(ctx context.Context, pro
 	res, err := cli.QueryDeviceByDriverAndGroup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetDeviceRequest{Driver: driverId, Group: groupId})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -622,14 +501,8 @@ func (c *Client) QueryOnlyTableSchemaDeviceByDriverAndGroup(ctx context.Context,
 	res, err := cli.QueryTableDeviceByDriverAndGroup(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetDeviceRequest{Driver: driverId, Group: groupId})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -651,14 +524,8 @@ func (c *Client) FindDevice(ctx context.Context, projectId, driverId, groupId, t
 	res, err := cli.FindDevice(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetDataDeviceRequest{Driver: driverId, Group: groupId, Table: tableId, Id: deviceId})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -674,14 +541,8 @@ func (c *Client) QueryEmulator(ctx context.Context, projectId string, result int
 	res, err := cli.QueryEmulator(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -700,19 +561,7 @@ func (c *Client) GetTableSchema(ctx context.Context, projectId, id string, resul
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteTableSchema(ctx context.Context, projectId, id string, result interface{}) error {
@@ -729,14 +578,8 @@ func (c *Client) DeleteTableSchema(ctx context.Context, projectId, id string, re
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -762,14 +605,8 @@ func (c *Client) UpdateTableSchema(ctx context.Context, projectId, id string, up
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -795,14 +632,8 @@ func (c *Client) ReplaceTableSchema(ctx context.Context, projectId, id string, u
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -825,14 +656,8 @@ func (c *Client) CreateTableSchema(ctx context.Context, projectId string, create
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -852,14 +677,8 @@ func (c *Client) QueryTableRecord(ctx context.Context, projectId string, query, 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -878,19 +697,7 @@ func (c *Client) GetTableRecord(ctx context.Context, projectId, id string, resul
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteTableRecord(ctx context.Context, projectId, id string, result interface{}) error {
@@ -907,14 +714,8 @@ func (c *Client) DeleteTableRecord(ctx context.Context, projectId, id string, re
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -940,14 +741,8 @@ func (c *Client) UpdateTableRecord(ctx context.Context, projectId, id string, up
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -973,14 +768,8 @@ func (c *Client) ReplaceTableRecord(ctx context.Context, projectId, id string, u
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1003,14 +792,8 @@ func (c *Client) CreateTableRecord(ctx context.Context, projectId string, create
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1036,16 +819,8 @@ func (c *Client) QueryTableData(ctx context.Context, projectId, tableName string
 			Table: tableName,
 			Query: bts,
 		})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if res.GetResult() != nil {
-		if err := json.Unmarshal(res.GetResult(), result); err != nil {
-			return res.GetCount(), errors.Wrap(err, "解析请求结果错误")
-		}
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -1071,14 +846,8 @@ func (c *Client) QueryTableDataByTableId(ctx context.Context, projectId, tableId
 			Table: tableId,
 			Query: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1100,19 +869,7 @@ func (c *Client) GetTableData(ctx context.Context, projectId, tableName, id stri
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteTableData(ctx context.Context, projectId, tableName, id string, result interface{}) error {
@@ -1132,14 +889,8 @@ func (c *Client) DeleteTableData(ctx context.Context, projectId, tableName, id s
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1162,14 +913,8 @@ func (c *Client) DeleteManyTableData(ctx context.Context, projectId, tableName s
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.QueryDataRequest{Table: tableName, Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1198,14 +943,8 @@ func (c *Client) UpdateTableData(ctx context.Context, projectId, tableName, id s
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts, CloseRequire: closeRequire})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1234,14 +973,8 @@ func (c *Client) ReplaceTableData(ctx context.Context, projectId, tableName, id 
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts, CloseRequire: closeRequire})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1271,14 +1004,8 @@ func (c *Client) CreateTableData(ctx context.Context, projectId, tableName strin
 			Data:         bts,
 			CloseRequire: closeRequire,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1308,14 +1035,8 @@ func (c *Client) CreateManyTableData(ctx context.Context, projectId, tableName s
 			Data:         bts,
 			CloseRequire: closeRequire,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1338,14 +1059,8 @@ func (c *Client) CreateMessage(ctx context.Context, projectId string, createData
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1365,16 +1080,10 @@ func (c *Client) QueryMessage(ctx context.Context, projectId string, query, resu
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
-	}
-	return int(res.Count), nil
+	return int(res.GetCount()), nil
 }
 
 func (c *Client) GetLog(ctx context.Context, projectId, id string, result interface{}) ([]byte, error) {
@@ -1391,19 +1100,7 @@ func (c *Client) GetLog(ctx context.Context, projectId, id string, result interf
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) QueryLog(ctx context.Context, projectId string, query, result interface{}) (int, error) {
@@ -1421,16 +1118,10 @@ func (c *Client) QueryLog(ctx context.Context, projectId string, query, result i
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
-	}
-	return int(res.Count), nil
+	return int(res.GetCount()), nil
 }
 
 func (c *Client) PostLatest(ctx context.Context, projectId string, createData, result interface{}) error {
@@ -1451,14 +1142,8 @@ func (c *Client) PostLatest(ctx context.Context, projectId string, createData, r
 	res, err := cli.PostLatest(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1478,14 +1163,8 @@ func (c *Client) GetQuery(ctx context.Context, projectId string, query, result i
 	res, err := cli.GetQuery(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1508,14 +1187,8 @@ func (c *Client) PostQuery(ctx context.Context, projectId string, createData, re
 	res, err := cli.PostQuery(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1535,14 +1208,8 @@ func (c *Client) QueryRole(ctx context.Context, projectId string, query, result 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1561,14 +1228,8 @@ func (c *Client) AdminRoleCheck(ctx context.Context, projectId, token string, re
 	res, err := cli.AdminRoleCheck(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&api.EmptyRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1587,19 +1248,7 @@ func (c *Client) GetRole(ctx context.Context, projectId, id string, result inter
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) FindTableDataDeptByDeptIDs(ctx context.Context, projectId string, ids map[string]interface{}, result interface{}) error {
@@ -1619,14 +1268,8 @@ func (c *Client) FindTableDataDeptByDeptIDs(ctx context.Context, projectId strin
 		&api.CreateRequest{
 			Data: bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1653,14 +1296,8 @@ func (c *Client) UpdateManyTableData(ctx context.Context, projectId, tableName s
 	res, err := cli.UpdateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.MultiUpdateDataRequest{Table: tableName, Query: bts, Data: btsUpdate, CloseRequire: closeRequire})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1679,14 +1316,8 @@ func (c *Client) GetWarningFilterIDs(ctx context.Context, projectId, token strin
 	res, err := cli.GetWarningFilterIDs(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, config.XRequestHeaderAuthorization: token}),
 		&api.EmptyRequest{})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1706,14 +1337,8 @@ func (c *Client) QueryCatalog(ctx context.Context, projectId string, query, resu
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1732,19 +1357,7 @@ func (c *Client) GetCatalog(ctx context.Context, projectId, id string, result in
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) QueryDept(ctx context.Context, projectId string, query, result interface{}) error {
@@ -1762,14 +1375,8 @@ func (c *Client) QueryDept(ctx context.Context, projectId string, query, result 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1788,19 +1395,7 @@ func (c *Client) GetDept(ctx context.Context, projectId, id string, result inter
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) QuerySetting(ctx context.Context, projectId string, query, result interface{}) error {
@@ -1818,14 +1413,8 @@ func (c *Client) QuerySetting(ctx context.Context, projectId string, query, resu
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1845,14 +1434,8 @@ func (c *Client) QueryApp(ctx context.Context, projectId string, query, result i
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1871,19 +1454,7 @@ func (c *Client) GetApp(ctx context.Context, projectId, id string, result interf
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) QuerySystemVariable(ctx context.Context, projectId string, query, result interface{}) error {
@@ -1901,14 +1472,8 @@ func (c *Client) QuerySystemVariable(ctx context.Context, projectId string, quer
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1927,19 +1492,7 @@ func (c *Client) GetSystemVariable(ctx context.Context, projectId, id string, re
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteSystemVariable(ctx context.Context, projectId, id string, result interface{}) error {
@@ -1956,14 +1509,8 @@ func (c *Client) DeleteSystemVariable(ctx context.Context, projectId, id string,
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1990,14 +1537,8 @@ func (c *Client) UpdateSystemVariable(ctx context.Context, projectId, id string,
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2023,14 +1564,8 @@ func (c *Client) ReplaceSystemVariable(ctx context.Context, projectId, id string
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2053,14 +1588,8 @@ func (c *Client) CreateSystemVariable(ctx context.Context, projectId string, cre
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2080,16 +1609,10 @@ func (c *Client) QueryBackup(ctx context.Context, projectId string, query, resul
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
-	}
-	*count = res.Count
+	*count = res.GetCount()
 	return nil
 }
 
@@ -2107,21 +1630,7 @@ func (c *Client) GetBackup(ctx context.Context, projectId, id string, result int
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	logger.Infof("res.GetResult():%+v", string(res.GetResult()))
-
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteBackup(ctx context.Context, projectId, id string, result interface{}) error {
@@ -2138,14 +1647,8 @@ func (c *Client) DeleteBackup(ctx context.Context, projectId, id string, result 
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2172,14 +1675,8 @@ func (c *Client) UpdateBackup(ctx context.Context, projectId, id string, updateD
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2199,11 +1696,8 @@ func (c *Client) ExportBackup(ctx context.Context, projectId string, query inter
 	res, err := cli.Export(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return "", errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return "", internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return "", err
 	}
 	id := string(res.GetResult())
 	return id, nil
@@ -2224,11 +1718,8 @@ func (c *Client) ImportBackup(ctx context.Context, projectId string, query inter
 	res, err := cli.Import(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return "", errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return "", internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return "", err
 	}
 	id := string(res.GetResult())
 	return id, nil
@@ -2245,7 +1736,7 @@ func (c *Client) UploadBackup(ctx context.Context, projectId, password string, s
 	}
 	stream, err := cli.Upload(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, "password": password}))
 	if err != nil {
-		return errors.Wrap(err, "请求错误")
+		return errors.NewResErrorMsg(err, "请求错误")
 	}
 
 	//defer stream.CloseAndRecv()
@@ -2303,7 +1794,7 @@ func (c *Client) DownloadBackup(ctx context.Context, projectId, id, password str
 	in.Id = id
 	stream, err := cli.Download(apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId, "password": password, "id": id}), in)
 	if err != nil {
-		return errors.Wrap(err, "请求错误")
+		return errors.NewResErrorMsg(err, "请求错误")
 	}
 
 	defer func() {
@@ -2375,19 +1866,7 @@ func (c *Client) FindTagByID(ctx context.Context, projectId, tableId, id string,
 	res, err := cli.FindTagByID(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableId, Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) QueryTaskManager(ctx context.Context, projectId string, query, result interface{}) error {
@@ -2405,14 +1884,8 @@ func (c *Client) QueryTaskManager(ctx context.Context, projectId string, query, 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2431,19 +1904,7 @@ func (c *Client) GetTaskManager(ctx context.Context, projectId, id string, resul
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteTaskManager(ctx context.Context, projectId, id string, result interface{}) error {
@@ -2457,18 +1918,11 @@ func (c *Client) DeleteTaskManager(ctx context.Context, projectId, id string, re
 	if err != nil {
 		return err
 	}
-
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2496,14 +1950,8 @@ func (c *Client) UpdateTaskManager(ctx context.Context, projectId, id string, up
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2529,14 +1977,8 @@ func (c *Client) ReplaceTaskManager(ctx context.Context, projectId, id string, u
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2559,14 +2001,8 @@ func (c *Client) CreateTaskManager(ctx context.Context, projectId string, create
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2585,14 +2021,8 @@ func (c *Client) FindTableCommandById(ctx context.Context, projectId, id string,
 	res, err := cli.FindCommandByID(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2611,14 +2041,8 @@ func (c *Client) FindTableDataCommandById(ctx context.Context, projectId, tableI
 	res, err := cli.FindCommandByID(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableId, Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2644,16 +2068,8 @@ func (c *Client) QueryTableDataByDB(ctx context.Context, projectId, tableName st
 			Table: tableName,
 			Query: bts,
 		})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if res.GetResult() != nil {
-		if err := json.Unmarshal(res.GetResult(), result); err != nil {
-			return res.GetCount(), errors.Wrap(err, "解析请求结果错误")
-		}
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
 	return res.GetCount(), nil
 }
@@ -2675,19 +2091,7 @@ func (c *Client) GetTableDataByDB(ctx context.Context, projectId, tableName, id 
 	res, err := cli.GetByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteTableDataByDB(ctx context.Context, projectId, tableName, id string, result interface{}) error {
@@ -2707,14 +2111,8 @@ func (c *Client) DeleteTableDataByDB(ctx context.Context, projectId, tableName, 
 	res, err := cli.DeleteByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.GetOrDeleteDataRequest{Table: tableName, Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2737,14 +2135,8 @@ func (c *Client) DeleteManyTableDataByDB(ctx context.Context, projectId, tableNa
 	res, err := cli.DeleteManyByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.QueryDataRequest{Table: tableName, Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2773,14 +2165,8 @@ func (c *Client) UpdateTableDataByDB(ctx context.Context, projectId, tableName, 
 	res, err := cli.UpdateByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2809,14 +2195,8 @@ func (c *Client) ReplaceTableDataByDB(ctx context.Context, projectId, tableName,
 	res, err := cli.ReplaceByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.UpdateDataRequest{Table: tableName, Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2845,14 +2225,8 @@ func (c *Client) CreateTableDataByDB(ctx context.Context, projectId, tableName s
 			Table: tableName,
 			Data:  bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2881,14 +2255,8 @@ func (c *Client) CreateManyTableDataByDB(ctx context.Context, projectId, tableNa
 			Table: tableName,
 			Data:  bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2911,14 +2279,8 @@ func (c *Client) UpdateManyTableDataByDB(ctx context.Context, projectId, tableNa
 	res, err := cli.UpdateManyByDB(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.MultiUpdateDataRequest{Table: tableName, Data: btsUpdate})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2941,14 +2303,8 @@ func (c *Client) CreateDashboard(ctx context.Context, projectId string, createDa
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2968,16 +2324,10 @@ func (c *Client) QueryDashboard(ctx context.Context, projectId string, query, re
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
-	}
-	return int(res.Count), nil
+	return int(res.GetCount()), nil
 }
 
 // UploadFileFromUrl 将远程文件上传到媒体库
@@ -3009,7 +2359,7 @@ func (c *Client) UploadFileFromUrl(ctx context.Context, projectId string, source
 	if err := cli.Invoke(apitransport.NewClientContext(ctx, &apitransport.Transport{ReqHeader: map[string]string{config.XRequestProject: projectId}}),
 		"POST", "/core/mediaLibrary/saveFileFromUrl",
 		body, &result); err != nil {
-		return "", errors.Wrap(err, "请求错误")
+		return "", errors.NewResErrorMsg(err, "请求错误")
 	}
 
 	fileUrl, ok := result["url"]

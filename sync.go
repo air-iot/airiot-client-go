@@ -6,7 +6,6 @@ import (
 	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/apicontext"
 	"github.com/air-iot/api-client-go/v4/config"
-	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/errors"
 	"github.com/air-iot/json"
 )
@@ -29,14 +28,8 @@ func (c *Client) CreateSync(ctx context.Context, projectId string, createData, r
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -57,16 +50,10 @@ func (c *Client) QuerySync(ctx context.Context, projectId string, query, result 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return 0, errors.Wrap(err, "解析请求结果错误")
-	}
-	return int(res.Count), nil
+	return int(res.GetCount()), nil
 }
 
 func (c *Client) GetSync(ctx context.Context, projectId, id string, result interface{}) ([]byte, error) {
@@ -83,19 +70,7 @@ func (c *Client) GetSync(ctx context.Context, projectId, id string, result inter
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) UpdateSync(ctx context.Context, projectId, id string, updateData, result interface{}) error {
@@ -119,14 +94,8 @@ func (c *Client) UpdateSync(ctx context.Context, projectId, id string, updateDat
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -146,14 +115,8 @@ func (c *Client) DeleteSync(ctx context.Context, projectId, id string, result in
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -179,14 +142,8 @@ func (c *Client) ReplaceSync(ctx context.Context, projectId, id string, updateDa
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }

@@ -47,14 +47,8 @@ func (c *Client) BatchCommand(ctx context.Context, projectId string, data interf
 	res, err := cli.BatchCommand(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -81,14 +75,8 @@ func (c *Client) ChangeCommand(ctx context.Context, projectId, id string, data, 
 	res, err := cli.ChangeCommand(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -112,14 +100,8 @@ func (c *Client) DriverWriteTag(ctx context.Context, projectId string, data *Dri
 	res, err := cli.WriteTag(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -143,14 +125,8 @@ func (c *Client) DriverBatchWriteTag(ctx context.Context, projectId string, data
 	res, err := cli.BatchWriteTag(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -189,14 +165,8 @@ func (c *Client) HttpProxy(ctx context.Context, projectId, typeId, groupId strin
 			Headers:   headersBytes,
 			Data:      bts,
 		})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -216,14 +186,8 @@ func (c *Client) QueryDriverInstance(ctx context.Context, projectId string, quer
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -242,19 +206,7 @@ func (c *Client) GetDriverInstance(ctx context.Context, projectId, id string, re
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteDriverInstance(ctx context.Context, projectId, id string, result interface{}) error {
@@ -272,14 +224,8 @@ func (c *Client) DeleteDriverInstance(ctx context.Context, projectId, id string,
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -307,14 +253,8 @@ func (c *Client) UpdateDriverInstance(ctx context.Context, projectId, id string,
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -340,14 +280,8 @@ func (c *Client) ReplaceDriverInstance(ctx context.Context, projectId, id string
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -370,14 +304,8 @@ func (c *Client) CreateDriverInstance(ctx context.Context, projectId string, cre
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -397,14 +325,8 @@ func (c *Client) QueryDriverEventCron(ctx context.Context, projectId string, que
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -423,19 +345,7 @@ func (c *Client) GetDriverEventCron(ctx context.Context, projectId, id string, r
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteDriverEventCron(ctx context.Context, projectId, id string) error {
@@ -452,11 +362,8 @@ func (c *Client) DeleteDriverEventCron(ctx context.Context, projectId, id string
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -484,11 +391,8 @@ func (c *Client) UpdateDriverEventCron(ctx context.Context, projectId, id string
 	res, err := cli.Update(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -514,11 +418,8 @@ func (c *Client) ReplaceDriverEventCron(ctx context.Context, projectId, id strin
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -541,14 +442,8 @@ func (c *Client) CreateDriverEventCron(ctx context.Context, projectId string, cr
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -571,14 +466,8 @@ func (c *Client) CreateManyDriverEventCron(ctx context.Context, projectId string
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -598,13 +487,10 @@ func (c *Client) DeleteManyDriverEventCron(ctx context.Context, projectId string
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	return res.Count, nil
+	return res.GetCount(), nil
 }
 
 func (c *Client) QueryDriverInstructCron(ctx context.Context, projectId string, query, result interface{}) error {
@@ -622,14 +508,8 @@ func (c *Client) QueryDriverInstructCron(ctx context.Context, projectId string, 
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -648,19 +528,7 @@ func (c *Client) GetDriverInstructCron(ctx context.Context, projectId, id string
 	res, err := cli.Get(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return nil, errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return nil, internalError.ParseResponse(res)
-	}
-	if result == nil {
-		return res.GetResult(), nil
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return nil, errors.Wrap(err, "解析请求结果错误")
-	}
-	return res.GetResult(), nil
+	return parseRes(err, res, result)
 }
 
 func (c *Client) DeleteDriverInstructCron(ctx context.Context, projectId, id string) error {
@@ -677,11 +545,8 @@ func (c *Client) DeleteDriverInstructCron(ctx context.Context, projectId, id str
 	res, err := cli.Delete(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.GetOrDeleteRequest{Id: id})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -739,11 +604,8 @@ func (c *Client) ReplaceDriverInstructCron(ctx context.Context, projectId, id st
 	res, err := cli.Replace(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.UpdateRequest{Id: id, Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
+	if _, err := parseRes(err, res, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -766,14 +628,8 @@ func (c *Client) CreateDriverInstructCron(ctx context.Context, projectId string,
 	res, err := cli.Create(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -796,14 +652,8 @@ func (c *Client) CreateManyDriverInstructCron(ctx context.Context, projectId str
 	res, err := cli.CreateMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.CreateRequest{Data: bts})
-	if err != nil {
-		return errors.Wrap(err, "请求错误")
-	}
-	if !res.GetStatus() {
-		return internalError.ParseResponse(res)
-	}
-	if err := json.Unmarshal(res.GetResult(), result); err != nil {
-		return errors.Wrap(err, "解析请求结果错误")
+	if _, err := parseRes(err, res, result); err != nil {
+		return err
 	}
 	return nil
 }
@@ -823,11 +673,8 @@ func (c *Client) DeleteManyDriverInstructCron(ctx context.Context, projectId str
 	res, err := cli.DeleteMany(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
-	if err != nil {
-		return 0, errors.Wrap(err, "请求错误")
+	if _, err := parseRes(err, res, nil); err != nil {
+		return 0, err
 	}
-	if !res.GetStatus() {
-		return 0, internalError.ParseResponse(res)
-	}
-	return res.Count, nil
+	return res.GetCount(), nil
 }
