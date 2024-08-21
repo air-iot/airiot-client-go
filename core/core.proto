@@ -34,6 +34,7 @@ service LogService {
   rpc Create (api.CreateRequest) returns (api.Response) {}
   rpc Get (api.GetOrDeleteRequest) returns (api.Response) {}
   rpc Query (api.QueryRequest) returns (api.Response) {}
+  rpc QueryApiPermission (api.QueryRequest) returns (api.Response) {}
 }
 
 service UserService {

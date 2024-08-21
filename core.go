@@ -1124,6 +1124,27 @@ func (c *Client) QueryLog(ctx context.Context, projectId string, query, result i
 	return int(res.GetCount()), nil
 }
 
+func (c *Client) QueryApiPermissionLog(ctx context.Context, projectId string, query, result interface{}) (int, error) {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	bts, err := json.Marshal(query)
+	if err != nil {
+		return 0, errors.Wrap(err, "序列化查询参数为空")
+	}
+	cli, err := c.CoreClient.GetLogServiceClient()
+	if err != nil {
+		return 0, err
+	}
+	res, err := cli.QueryApiPermission(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&api.QueryRequest{Query: bts})
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
+	}
+	return int(res.GetCount()), nil
+}
+
 func (c *Client) PostLatest(ctx context.Context, projectId string, createData, result interface{}) error {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
