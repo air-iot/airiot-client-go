@@ -2395,3 +2395,61 @@ func (c *Client) UploadFileFromUrl(ctx context.Context, projectId string, source
 
 	return fileUrlStr, nil
 }
+
+func (c *Client) UploadFileFromBase64(ctx context.Context, projectId string, base64Str, mediaLibraryPath, saveFileName, action string) (string, error) {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	cli, err := c.CoreClient.GetMediaLibraryServiceClient()
+	if err != nil {
+		return "", err
+	}
+
+	res, err := cli.UploadFromBase64(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&core.MediaLibraryUploadFromBase64Request{
+			Base64Str:        base64Str,
+			MediaLibraryPath: mediaLibraryPath,
+			SaveFileName:     saveFileName,
+			Action:           action,
+		})
+
+	var result map[string]interface{}
+	_, err = parseRes(err, res, result)
+	fileUrl, ok := result["url"]
+	if !ok {
+		return "", errors.New("上传媒体库成功, 但未返回文件的 url")
+	}
+
+	fileUrlStr, ok := fileUrl.(string)
+	if !ok {
+		return "", fmt.Errorf("上传媒体库成功, 但返回文件的 url 不是字符串, %+v", fileUrl)
+	}
+
+	return fileUrlStr, nil
+}
+
+func (c *Client) QueryMediaLibrary(ctx context.Context, projectId string, catalog string, addBase64 bool, query, result interface{}) (int, error) {
+	if projectId == "" {
+		projectId = config.XRequestProjectDefault
+	}
+	bts, err := json.Marshal(query)
+	if err != nil {
+		return 0, errors.Wrap(err, "序列化查询参数为空")
+	}
+	cli, err := c.CoreClient.GetMediaLibraryServiceClient()
+	if err != nil {
+		return 0, err
+	}
+	res, err := cli.Query(
+		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
+		&core.MediaLibraryQueryRequest{
+			Catalog:   catalog,
+			AddBase64: addBase64,
+			Query:     bts,
+		})
+	if _, err := parseRes(err, res, result); err != nil {
+		return 0, err
+	}
+	return int(res.GetCount()), nil
+}

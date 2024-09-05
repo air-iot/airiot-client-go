@@ -167,6 +167,12 @@ service TaskManagerService {
   rpc Create (api.CreateRequest) returns (api.Response) {}
 }
 
+service MediaLibraryService {
+  rpc Query (MediaLibraryQueryRequest) returns (api.Response) {}
+  rpc UploadFromUrl(MediaLibraryUploadFromUrlRequest) returns (api.Response) {}
+  rpc UploadFromBase64(MediaLibraryUploadFromBase64Request) returns (api.Response) {}
+}
+
 message GetDeviceRequest {
   string driver = 1;
   string group = 2;
@@ -223,4 +229,24 @@ message UploadFileRequest {
 
 message DownloadFileResponse {
   bytes data = 1;
+}
+
+message MediaLibraryQueryRequest {
+  string catalog = 1;
+  bool addBase64 = 2;
+  bytes query = 3;
+}
+
+message MediaLibraryUploadFromUrlRequest {
+  string fileUrl = 1;
+  string mediaLibraryPath = 2;
+  string saveFileName = 3;
+  string action = 4;
+}
+
+message MediaLibraryUploadFromBase64Request {
+  string base64Str = 1;
+  string mediaLibraryPath = 2;
+  string saveFileName = 3;
+  string action = 4;
 }
