@@ -100,6 +100,7 @@ func (c *Client) createConn() error {
 	c.backupServiceClient = NewBackupServiceClient(cc)
 	c.dashboardClient = NewDashboardServiceClient(cc)
 	c.taskManagerServiceClient = NewTaskManagerServiceClient(cc)
+	c.mediaLibraryClient = NewMediaLibraryServiceClient(cc)
 	c.conn = cc
 	return nil
 }
