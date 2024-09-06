@@ -10,6 +10,7 @@ require (
 	github.com/go-kratos/kratos/contrib/config/etcd/v2 v2.0.0-20240725023016-d6fca5e3e984
 	github.com/go-kratos/kratos/contrib/registry/etcd/v2 v2.0.0-20240725023016-d6fca5e3e984
 	github.com/go-kratos/kratos/v2 v2.8.0
+	github.com/golang/protobuf v1.5.4
 	github.com/spf13/viper v1.18.2
 	go.etcd.io/etcd/client/v3 v3.5.15
 	go.opentelemetry.io/otel v1.24.0
@@ -28,7 +29,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/form/v4 v4.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
