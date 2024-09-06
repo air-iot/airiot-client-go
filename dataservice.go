@@ -109,9 +109,8 @@ func (c *Client) QueryDataGroup(ctx context.Context, projectId string, query, re
 	if err != nil {
 		return 0, err
 	}
-	res, err := cli.Query(
-		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
-		&api.QueryRequest{Query: bts})
+	ctx = apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId})
+	res, err := cli.Query(ctx, &api.QueryRequest{Query: bts})
 	if _, err := parseRes(err, res, result); err != nil {
 		return 0, err
 	}
