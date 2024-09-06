@@ -2415,7 +2415,10 @@ func (c *Client) UploadFileFromBase64(ctx context.Context, projectId string, bas
 		})
 
 	var result map[string]interface{}
-	_, err = parseRes(err, res, result)
+	_, err = parseRes(err, res, &result)
+	if err != nil {
+		return "", err
+	}
 	fileUrl, ok := result["url"]
 	if !ok {
 		return "", errors.New("上传媒体库成功, 但未返回文件的 url")
