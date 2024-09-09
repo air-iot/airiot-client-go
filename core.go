@@ -6,6 +6,7 @@ import (
 	"io"
 	netHttp "net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/apicontext"
@@ -2360,40 +2361,57 @@ func (c *Client) QueryDashboard(ctx context.Context, projectId string, query, re
 // filename 上传到媒体库后的文件名
 //
 // 上传成功后返回文件的访问地址
-func (c *Client) UploadFileFromUrl(ctx context.Context, projectId string, sourceUrl string, catalog string, filename string) (string, error) {
+func (c *Client) UploadFileFromUrl(ctx context.Context, projectId string, sourceUrl string, catalog string, filename string, action string, addBase64 bool) (string, string, error) {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
+
+	// 布尔值转字符串
+	addBase64Str := strconv.FormatBool(addBase64)
 
 	body := map[string]string{
 		"fileUrl":          sourceUrl,
 		"mediaLibraryPath": catalog,
 		"saveFileName":     filename,
+		"action":           action,
+		"addBase64":        addBase64Str,
 	}
 
 	cli, err := c.CoreClient.GetRestClient()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	var result map[string]interface{}
 	if err := cli.Invoke(apitransport.NewClientContext(ctx, &apitransport.Transport{ReqHeader: map[string]string{config.XRequestProject: projectId}}),
 		"POST", "/core/mediaLibrary/saveFileFromUrl",
 		body, &result); err != nil {
-		return "", errors.NewResErrorMsg(err, "请求错误")
+		return "", "", errors.NewResErrorMsg(err, "请求错误")
 	}
 
 	fileUrl, ok := result["url"]
 	if !ok {
-		return "", errors.New("上传媒体库成功, 但未返回文件的 url")
+		return "", "", errors.New("上传媒体库成功, 但未返回文件的 url")
 	}
 
 	fileUrlStr, ok := fileUrl.(string)
 	if !ok {
-		return "", fmt.Errorf("上传媒体库成功, 但返回文件的 url 不是字符串, %+v", fileUrl)
+		return "", "", fmt.Errorf("上传媒体库成功, 但返回文件的 url 不是字符串, %+v", fileUrl)
 	}
 
-	return fileUrlStr, nil
+	if addBase64 {
+		addBase64StrRaw, ok := result["base64Str"]
+		if !ok {
+			return "", "", errors.New("上传媒体库成功, 但未返回文件的base64字符串")
+		}
+		base64Str, ok := addBase64StrRaw.(string)
+		if !ok {
+			return "", "", fmt.Errorf("上传媒体库成功, 但返回的base64Str不是字符串")
+		}
+		return fileUrlStr, base64Str, nil
+	} else {
+		return fileUrlStr, "", nil
+	}
 }
 
 func (c *Client) UploadFileFromBase64(ctx context.Context, projectId string, base64Str, mediaLibraryPath, saveFileName, action string) (string, error) {
