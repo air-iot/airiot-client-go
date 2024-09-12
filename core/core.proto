@@ -234,7 +234,8 @@ message DownloadFileResponse {
 message MediaLibraryQueryRequest {
   string catalog = 1;
   bool addBase64 = 2;
-  bytes query = 3;
+  bool isFile = 3;
+  bytes query = 4;
 }
 
 message MediaLibraryUploadFromUrlRequest {

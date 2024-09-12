@@ -2450,7 +2450,7 @@ func (c *Client) UploadFileFromBase64(ctx context.Context, projectId string, bas
 	return fileUrlStr, nil
 }
 
-func (c *Client) QueryMediaLibrary(ctx context.Context, projectId string, catalog string, addBase64 bool, query, result interface{}) (int, error) {
+func (c *Client) QueryMediaLibrary(ctx context.Context, projectId string, catalog string, isFile, addBase64 bool, query, result interface{}) (int, error) {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
@@ -2466,6 +2466,7 @@ func (c *Client) QueryMediaLibrary(ctx context.Context, projectId string, catalo
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&core.MediaLibraryQueryRequest{
 			Catalog:   catalog,
+			IsFile:    isFile,
 			AddBase64: addBase64,
 			Query:     bts,
 		})
