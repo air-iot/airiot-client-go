@@ -149,6 +149,7 @@ message UpdateDeviceResult {
 
 message SchemaRequest {
   string request = 1;
+  string locale = 2;
 }
 
 message SchemaResult {
