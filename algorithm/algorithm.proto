@@ -65,6 +65,7 @@ message Error {
 
 message SchemaRequest {
   string request = 1;
+  string lang = 2;
 }
 
 message SchemaResult {
