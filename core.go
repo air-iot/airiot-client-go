@@ -2632,23 +2632,23 @@ func (c *Client) GetMediaLibraryDirSettingByPath(ctx context.Context, projectId,
 	return parseRes(err, res, result)
 }
 
-func (c *Client) QueryMediaLibraryDirSetting(ctx context.Context, projectId string, query, result interface{}) error {
+func (c *Client) QueryMediaLibraryDirSetting(ctx context.Context, projectId string, query, result interface{}) (int, error) {
 	if projectId == "" {
 		projectId = config.XRequestProjectDefault
 	}
 	bts, err := json.Marshal(query)
 	if err != nil {
-		return errors.Wrap(err, "序列化查询参数为空")
+		return 0, errors.Wrap(err, "序列化查询参数为空")
 	}
 	cli, err := c.CoreClient.GetMediaLibraryDirSettingServiceClient()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	res, err := cli.Query(
 		apicontext.GetGrpcContext(ctx, map[string]string{config.XRequestProject: projectId}),
 		&api.QueryRequest{Query: bts})
 	if _, err := parseRes(err, res, result); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return int(res.GetCount()), nil
 }
