@@ -24,24 +24,25 @@ type Client struct {
 	opts        []grpc.DialOption
 	middlewares []middleware.Middleware
 
-	appServiceClient           AppServiceClient
-	licenseServiceClient       LicenseServiceClient
-	userServiceClient          UserServiceClient
-	logServiceClient           LogServiceClient
-	tableSchemaClient          TableSchemaServiceClient
-	tableRecordClient          TableRecordServiceClient
-	tableDataClient            TableDataServiceClient
-	messageClient              MessageServiceClient
-	dataQueryClient            DataQueryServiceClient
-	roleClient                 RoleServiceClient
-	catalogClient              CatalogServiceClient
-	deptClient                 DeptServiceClient
-	settingClient              SettingServiceClient
-	systemVariablServiceClient SystemVariableServiceClient
-	backupServiceClient        BackupServiceClient
-	taskManagerServiceClient   TaskManagerServiceClient
-	dashboardClient            DashboardServiceClient
-	mediaLibraryClient         MediaLibraryServiceClient
+	appServiceClient             AppServiceClient
+	licenseServiceClient         LicenseServiceClient
+	userServiceClient            UserServiceClient
+	logServiceClient             LogServiceClient
+	tableSchemaClient            TableSchemaServiceClient
+	tableRecordClient            TableRecordServiceClient
+	tableDataClient              TableDataServiceClient
+	messageClient                MessageServiceClient
+	dataQueryClient              DataQueryServiceClient
+	roleClient                   RoleServiceClient
+	catalogClient                CatalogServiceClient
+	deptClient                   DeptServiceClient
+	settingClient                SettingServiceClient
+	systemVariablServiceClient   SystemVariableServiceClient
+	backupServiceClient          BackupServiceClient
+	taskManagerServiceClient     TaskManagerServiceClient
+	dashboardClient              DashboardServiceClient
+	mediaLibraryClient           MediaLibraryServiceClient
+	mediaLibraryDirSettingClient MediaLibraryDirSettingServiceClient
 }
 
 func NewClient(cfg config.Config, registry *etcd.Registry, cred grpc.DialOption, httpCred middleware.Middleware) (*Client, func(), error) {
@@ -101,6 +102,7 @@ func (c *Client) createConn() error {
 	c.dashboardClient = NewDashboardServiceClient(cc)
 	c.taskManagerServiceClient = NewTaskManagerServiceClient(cc)
 	c.mediaLibraryClient = NewMediaLibraryServiceClient(cc)
+	c.mediaLibraryDirSettingClient = NewMediaLibraryDirSettingServiceClient(cc)
 	c.conn = cc
 	return nil
 }
@@ -343,4 +345,16 @@ func (c *Client) GetMediaLibraryServiceClient() (MediaLibraryServiceClient, erro
 		return nil, errors.New("客户端是空")
 	}
 	return c.mediaLibraryClient, nil
+}
+
+func (c *Client) GetMediaLibraryDirSettingServiceClient() (MediaLibraryDirSettingServiceClient, error) {
+	if c.conn == nil {
+		if err := c.createConn(); err != nil {
+			return nil, err
+		}
+	}
+	if c.mediaLibraryDirSettingClient == nil {
+		return nil, errors.New("客户端是空")
+	}
+	return c.mediaLibraryDirSettingClient, nil
 }

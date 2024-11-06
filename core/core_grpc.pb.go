@@ -4849,3 +4849,316 @@ var MediaLibraryService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "core/core.proto",
 }
+
+const (
+	MediaLibraryDirSettingService_Create_FullMethodName    = "/core.MediaLibraryDirSettingService/Create"
+	MediaLibraryDirSettingService_Delete_FullMethodName    = "/core.MediaLibraryDirSettingService/Delete"
+	MediaLibraryDirSettingService_Update_FullMethodName    = "/core.MediaLibraryDirSettingService/Update"
+	MediaLibraryDirSettingService_Replace_FullMethodName   = "/core.MediaLibraryDirSettingService/Replace"
+	MediaLibraryDirSettingService_Get_FullMethodName       = "/core.MediaLibraryDirSettingService/Get"
+	MediaLibraryDirSettingService_GetByPath_FullMethodName = "/core.MediaLibraryDirSettingService/GetByPath"
+	MediaLibraryDirSettingService_Query_FullMethodName     = "/core.MediaLibraryDirSettingService/Query"
+)
+
+// MediaLibraryDirSettingServiceClient is the client API for MediaLibraryDirSettingService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type MediaLibraryDirSettingServiceClient interface {
+	Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Delete(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Replace(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error)
+	GetByPath(ctx context.Context, in *MediaLibraryDirSettingQueryByPathRequest, opts ...grpc.CallOption) (*api.Response, error)
+	Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error)
+}
+
+type mediaLibraryDirSettingServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMediaLibraryDirSettingServiceClient(cc grpc.ClientConnInterface) MediaLibraryDirSettingServiceClient {
+	return &mediaLibraryDirSettingServiceClient{cc}
+}
+
+func (c *mediaLibraryDirSettingServiceClient) Create(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_Create_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mediaLibraryDirSettingServiceClient) Delete(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_Delete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mediaLibraryDirSettingServiceClient) Update(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_Update_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mediaLibraryDirSettingServiceClient) Replace(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_Replace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mediaLibraryDirSettingServiceClient) Get(ctx context.Context, in *api.GetOrDeleteRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_Get_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mediaLibraryDirSettingServiceClient) GetByPath(ctx context.Context, in *MediaLibraryDirSettingQueryByPathRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_GetByPath_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mediaLibraryDirSettingServiceClient) Query(ctx context.Context, in *api.QueryRequest, opts ...grpc.CallOption) (*api.Response, error) {
+	out := new(api.Response)
+	err := c.cc.Invoke(ctx, MediaLibraryDirSettingService_Query_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MediaLibraryDirSettingServiceServer is the server API for MediaLibraryDirSettingService service.
+// All implementations must embed UnimplementedMediaLibraryDirSettingServiceServer
+// for forward compatibility
+type MediaLibraryDirSettingServiceServer interface {
+	Create(context.Context, *api.CreateRequest) (*api.Response, error)
+	Delete(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
+	Update(context.Context, *api.UpdateRequest) (*api.Response, error)
+	Replace(context.Context, *api.UpdateRequest) (*api.Response, error)
+	Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error)
+	GetByPath(context.Context, *MediaLibraryDirSettingQueryByPathRequest) (*api.Response, error)
+	Query(context.Context, *api.QueryRequest) (*api.Response, error)
+	mustEmbedUnimplementedMediaLibraryDirSettingServiceServer()
+}
+
+// UnimplementedMediaLibraryDirSettingServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedMediaLibraryDirSettingServiceServer struct {
+}
+
+func (UnimplementedMediaLibraryDirSettingServiceServer) Create(context.Context, *api.CreateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) Delete(context.Context, *api.GetOrDeleteRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) Update(context.Context, *api.UpdateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) Replace(context.Context, *api.UpdateRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Replace not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) Get(context.Context, *api.GetOrDeleteRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) GetByPath(context.Context, *MediaLibraryDirSettingQueryByPathRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetByPath not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) Query(context.Context, *api.QueryRequest) (*api.Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
+}
+func (UnimplementedMediaLibraryDirSettingServiceServer) mustEmbedUnimplementedMediaLibraryDirSettingServiceServer() {
+}
+
+// UnsafeMediaLibraryDirSettingServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MediaLibraryDirSettingServiceServer will
+// result in compilation errors.
+type UnsafeMediaLibraryDirSettingServiceServer interface {
+	mustEmbedUnimplementedMediaLibraryDirSettingServiceServer()
+}
+
+func RegisterMediaLibraryDirSettingServiceServer(s grpc.ServiceRegistrar, srv MediaLibraryDirSettingServiceServer) {
+	s.RegisterService(&MediaLibraryDirSettingService_ServiceDesc, srv)
+}
+
+func _MediaLibraryDirSettingService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_Create_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).Create(ctx, req.(*api.CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MediaLibraryDirSettingService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.GetOrDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_Delete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).Delete(ctx, req.(*api.GetOrDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MediaLibraryDirSettingService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_Update_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).Update(ctx, req.(*api.UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MediaLibraryDirSettingService_Replace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).Replace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_Replace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).Replace(ctx, req.(*api.UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MediaLibraryDirSettingService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.GetOrDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_Get_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).Get(ctx, req.(*api.GetOrDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MediaLibraryDirSettingService_GetByPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MediaLibraryDirSettingQueryByPathRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).GetByPath(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_GetByPath_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).GetByPath(ctx, req.(*MediaLibraryDirSettingQueryByPathRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MediaLibraryDirSettingService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaLibraryDirSettingServiceServer).Query(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaLibraryDirSettingService_Query_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaLibraryDirSettingServiceServer).Query(ctx, req.(*api.QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// MediaLibraryDirSettingService_ServiceDesc is the grpc.ServiceDesc for MediaLibraryDirSettingService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var MediaLibraryDirSettingService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.MediaLibraryDirSettingService",
+	HandlerType: (*MediaLibraryDirSettingServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _MediaLibraryDirSettingService_Create_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _MediaLibraryDirSettingService_Delete_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _MediaLibraryDirSettingService_Update_Handler,
+		},
+		{
+			MethodName: "Replace",
+			Handler:    _MediaLibraryDirSettingService_Replace_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _MediaLibraryDirSettingService_Get_Handler,
+		},
+		{
+			MethodName: "GetByPath",
+			Handler:    _MediaLibraryDirSettingService_GetByPath_Handler,
+		},
+		{
+			MethodName: "Query",
+			Handler:    _MediaLibraryDirSettingService_Query_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "core/core.proto",
+}
