@@ -160,6 +160,7 @@ message ExtensionError {
 
 message ExtensionSchemaRequest {
   string request = 1;
+  string locale = 2;
 }
 
 message ExtensionRunRequest {

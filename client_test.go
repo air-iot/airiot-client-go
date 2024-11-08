@@ -2,61 +2,61 @@ package api_client_go
 
 import (
 	"context"
-	"log"
+	"encoding/hex"
+	"github.com/air-iot/api-client-go/v4/driver"
+	"google.golang.org/protobuf/proto"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/json"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
 )
 
 var clientEtcd *clientv3.Client
 var cli *Client
 
-func TestMain(m *testing.M) {
-	log.Println("begin")
-	client, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:2379"},
-		DialTimeout: time.Second * time.Duration(60),
-		DialOptions: []grpc.DialOption{grpc.WithBlock()},
-		Username:    "root",
-		Password:    "",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	clientEtcd = client
-
-	cli1, clean, err := NewClient(clientEtcd, config.Config{
-		Metadata: map[string]string{"env": "aliyun"},
-		Services: map[string]config.Service{
-			//"core": {Metadata: map[string]string{"env": "local1"}},
-			//"spm":  {Metadata: map[string]string{"env": "local1"}},
-			//"data-service": {Metadata: map[string]string{"env": "local11"}},
-			//"flow-engine": {Metadata: map[string]string{"env": "local1"}},
-		},
-		Type: "tenant", // tenant 或 project
-		//ProjectId: "default",
-		AK:      "138dd03b-d3ee-4230-d3d2-520feb580bfe",
-		SK:      "138dd03b-d3ee-4230-d3d2-520feb580bfd",
-		Timeout: 60,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	cli = cli1
-	m.Run()
-	clean()
-	if err := client.Close(); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("end")
-}
+//func TestMain(m *testing.M) {
+//	log.Println("begin")
+//	client, err := clientv3.New(clientv3.Config{
+//		Endpoints:   []string{"127.0.0.1:2379"},
+//		DialTimeout: time.Second * time.Duration(60),
+//		DialOptions: []grpc.DialOption{grpc.WithBlock()},
+//		Username:    "root",
+//		Password:    "",
+//	})
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	clientEtcd = client
+//
+//	cli1, clean, err := NewClient(clientEtcd, config.Config{
+//		Metadata: map[string]string{"env": "aliyun"},
+//		Services: map[string]config.Service{
+//			//"core": {Metadata: map[string]string{"env": "local1"}},
+//			//"spm":  {Metadata: map[string]string{"env": "local1"}},
+//			//"data-service": {Metadata: map[string]string{"env": "local11"}},
+//			//"flow-engine": {Metadata: map[string]string{"env": "local1"}},
+//		},
+//		Type: "tenant", // tenant 或 project
+//		//ProjectId: "default",
+//		AK:      "138dd03b-d3ee-4230-d3d2-520feb580bfe",
+//		SK:      "138dd03b-d3ee-4230-d3d2-520feb580bfd",
+//		Timeout: 60,
+//	})
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	cli = cli1
+//	m.Run()
+//	clean()
+//	if err := client.Close(); err != nil {
+//		log.Fatal(err)
+//	}
+//	log.Println("end")
+//}
 
 func TestClient_Run(t *testing.T) {
 	type Element struct {
@@ -636,4 +636,22 @@ func Test_RestQueryTableSchema(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(arr)
+}
+
+func TestName(t *testing.T) {
+	var vv driver.RunResult
+
+	d1 := "0a1836373263383362373837616262376662373466376539376512b5027b22636f6465223a3230302c22726573756c74223a22616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161227d"
+	//d1 := "000000000b63373434663132643036656637643632383161393212b5027b22636f6465223a3230302c22726573756c74223a22616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161227d"
+	b1, err := hex.DecodeString(d1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = proto.Unmarshal(b1, &vv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(vv)
 }
