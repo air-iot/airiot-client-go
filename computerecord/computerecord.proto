@@ -1,0 +1,21 @@
+// Copyright 2015 The gRPC Authors
+// protoc -I . --go_out=plugins=grpc:. ./computerecord.proto
+
+// protoc -I ./ --go_out=. ./computerecord/computerecord.proto
+// protoc -I ./ --go-grpc_out=. computerecord/computerecord.proto
+
+syntax = "proto3";
+
+package computerecord;
+
+import "api/api.proto";
+
+option go_package = "./computerecord;computerecord";
+option java_package = "cn.airiot.sdk.client.dubbo.grpc.computerecord";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+option java_generic_services = true;
+
+service ComputeRecordService {
+  rpc FormulaDefaultSearch (api.CreateRequest) returns (api.Response) {}
+}

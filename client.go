@@ -3,6 +3,7 @@ package api_client_go
 import (
 	"fmt"
 	"github.com/air-iot/api-client-go/v4/api"
+	"github.com/air-iot/api-client-go/v4/computerecord"
 	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"log"
 
@@ -34,21 +35,22 @@ import (
 )
 
 type Client struct {
-	RegistryClient    *KratosRegistryClient
-	AuthClient        *auth.Client
-	SpmClient         *spm.Client
-	CoreClient        *core.Client
-	FlowClient        *flow.Client
-	WarningClient     *warning.Client
-	DriverClient      *driver.Client
-	DataServiceClient *dataservice.Client
-	FlowEngineClient  *engine.Client
-	ReportClient      *report.Client
-	LiveClient        *live.Client
-	AlgorithmClient   *algorithm.Client
-	DataRelayClient   *datarelay.Client
-	JsServerClient    *jsserver.Client
-	SyncClient        *sync.Client
+	RegistryClient      *KratosRegistryClient
+	AuthClient          *auth.Client
+	SpmClient           *spm.Client
+	CoreClient          *core.Client
+	FlowClient          *flow.Client
+	WarningClient       *warning.Client
+	DriverClient        *driver.Client
+	DataServiceClient   *dataservice.Client
+	FlowEngineClient    *engine.Client
+	ReportClient        *report.Client
+	LiveClient          *live.Client
+	AlgorithmClient     *algorithm.Client
+	DataRelayClient     *datarelay.Client
+	JsServerClient      *jsserver.Client
+	SyncClient          *sync.Client
+	ComputeRecordClient *computerecord.Client
 }
 
 func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error) {
@@ -156,22 +158,27 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
+	computeRecordClient, cleanComputeRecord, err := computerecord.NewClient(cfg, r, cred, httpCred)
+	if err != nil {
+		return nil, nil, err
+	}
 	return &Client{
-			RegistryClient:    NewKartosRegistryClient(cli),
-			AuthClient:        authCli,
-			SpmClient:         spmClient,
-			CoreClient:        coreClient,
-			FlowClient:        flowClient,
-			WarningClient:     warningClient,
-			DriverClient:      driverClient,
-			DataServiceClient: dataServiceClient,
-			FlowEngineClient:  flowEngineClient,
-			ReportClient:      reportClient,
-			LiveClient:        liveClient,
-			AlgorithmClient:   algorithmClient,
-			DataRelayClient:   dataRelayClient,
-			JsServerClient:    jsServerClient,
-			SyncClient:        syncClient,
+			RegistryClient:      NewKartosRegistryClient(cli),
+			AuthClient:          authCli,
+			SpmClient:           spmClient,
+			CoreClient:          coreClient,
+			FlowClient:          flowClient,
+			WarningClient:       warningClient,
+			DriverClient:        driverClient,
+			DataServiceClient:   dataServiceClient,
+			FlowEngineClient:    flowEngineClient,
+			ReportClient:        reportClient,
+			LiveClient:          liveClient,
+			AlgorithmClient:     algorithmClient,
+			DataRelayClient:     dataRelayClient,
+			JsServerClient:      jsServerClient,
+			SyncClient:          syncClient,
+			ComputeRecordClient: computeRecordClient,
 		}, func() {
 			cleanSpm()
 			cleanCore()
@@ -186,6 +193,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 			cleanDataRelay()
 			cleanJsServer()
 			cleanSync()
+			cleanComputeRecord()
 		}, nil
 }
 
