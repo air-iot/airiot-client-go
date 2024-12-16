@@ -13,7 +13,7 @@ import (
 	ggrpc "google.golang.org/grpc"
 )
 
-const serviceName = "computerecord"
+const serviceName = "compute-record"
 
 type Client struct {
 	lock        sync.RWMutex
