@@ -49,6 +49,7 @@ service UserService {
   rpc QueryBackup (api.QueryRequest) returns (api.Response) {}
   rpc DeleteManyBackup (api.QueryRequest) returns (api.Response) {}
   rpc CreateManyBackup (api.CreateRequest) returns (api.Response) {}
+  rpc CallAIModel (api.CreateRequest) returns (api.Response) {}
 }
 
 service TableSchemaService {
