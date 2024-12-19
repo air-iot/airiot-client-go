@@ -2,20 +2,21 @@ package api_client_go
 
 import (
 	"fmt"
-	"github.com/air-iot/api-client-go/v4/api"
-	"github.com/air-iot/api-client-go/v4/computerecord"
-	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"log"
+	"time"
 
 	"dario.cat/mergo"
 	"github.com/air-iot/api-client-go/v4/algorithm"
+	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/auth"
+	"github.com/air-iot/api-client-go/v4/computerecord"
 	"github.com/air-iot/api-client-go/v4/config"
 	"github.com/air-iot/api-client-go/v4/core"
 	"github.com/air-iot/api-client-go/v4/datarelay"
 	"github.com/air-iot/api-client-go/v4/dataservice"
 	"github.com/air-iot/api-client-go/v4/driver"
 	"github.com/air-iot/api-client-go/v4/engine"
+	internalError "github.com/air-iot/api-client-go/v4/errors"
 	"github.com/air-iot/api-client-go/v4/flow"
 	"github.com/air-iot/api-client-go/v4/jsserver"
 	"github.com/air-iot/api-client-go/v4/live"
@@ -35,6 +36,8 @@ import (
 )
 
 type Client struct {
+	Config config.Config
+
 	RegistryClient      *KratosRegistryClient
 	AuthClient          *auth.Client
 	SpmClient           *spm.Client
@@ -51,6 +54,7 @@ type Client struct {
 	JsServerClient      *jsserver.Client
 	SyncClient          *sync.Client
 	ComputeRecordClient *computerecord.Client
+	Service             *Service
 }
 
 func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error) {
@@ -97,6 +101,11 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 120
 	}
+
+	if cfg.Service.Expire == 0 {
+		cfg.Service.Expire = time.Second * 30
+	}
+
 	r := etcd.New(cli)
 	authCli := auth.NewClient(cfg)
 	f := func() *auth.Client {
@@ -162,39 +171,42 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
-	return &Client{
-			RegistryClient:      NewKartosRegistryClient(cli),
-			AuthClient:          authCli,
-			SpmClient:           spmClient,
-			CoreClient:          coreClient,
-			FlowClient:          flowClient,
-			WarningClient:       warningClient,
-			DriverClient:        driverClient,
-			DataServiceClient:   dataServiceClient,
-			FlowEngineClient:    flowEngineClient,
-			ReportClient:        reportClient,
-			LiveClient:          liveClient,
-			AlgorithmClient:     algorithmClient,
-			DataRelayClient:     dataRelayClient,
-			JsServerClient:      jsServerClient,
-			SyncClient:          syncClient,
-			ComputeRecordClient: computeRecordClient,
-		}, func() {
-			cleanSpm()
-			cleanCore()
-			cleanFlow()
-			cleanWarning()
-			cleanDriver()
-			cleanDataService()
-			cleanFlowEngine()
-			cleanReport()
-			cleanLive()
-			cleanAlgorithm()
-			cleanDataRelay()
-			cleanJsServer()
-			cleanSync()
-			cleanComputeRecord()
-		}, nil
+	a := &Client{
+		Config:              cfg,
+		RegistryClient:      NewKartosRegistryClient(cli),
+		AuthClient:          authCli,
+		SpmClient:           spmClient,
+		CoreClient:          coreClient,
+		FlowClient:          flowClient,
+		WarningClient:       warningClient,
+		DriverClient:        driverClient,
+		DataServiceClient:   dataServiceClient,
+		FlowEngineClient:    flowEngineClient,
+		ReportClient:        reportClient,
+		LiveClient:          liveClient,
+		AlgorithmClient:     algorithmClient,
+		DataRelayClient:     dataRelayClient,
+		JsServerClient:      jsServerClient,
+		SyncClient:          syncClient,
+		ComputeRecordClient: computeRecordClient,
+	}
+	a.Service = newService(a)
+	return a, func() {
+		cleanSpm()
+		cleanCore()
+		cleanFlow()
+		cleanWarning()
+		cleanDriver()
+		cleanDataService()
+		cleanFlowEngine()
+		cleanReport()
+		cleanLive()
+		cleanAlgorithm()
+		cleanDataRelay()
+		cleanJsServer()
+		cleanSync()
+		cleanComputeRecord()
+	}, nil
 }
 
 func parseRes(err error, res *api.Response, result interface{}) ([]byte, error) {

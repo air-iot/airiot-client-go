@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Config struct {
 	Gateway    string             `json:"gateway"`
 	EtcdConfig string             `json:"etcdConfig"`
@@ -12,6 +14,10 @@ type Config struct {
 	Timeout    uint               `json:"timeout"`
 	Limit      int                `json:"limit"`
 	Debug      bool               `json:"debug"`
+	Service    struct {
+		//Enable bool          `json:"enable"`
+		Expire time.Duration `json:"expire"`
+	} `json:"service"`
 }
 
 type KeyType string
