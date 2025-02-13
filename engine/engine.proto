@@ -17,6 +17,7 @@ option java_generic_services = true;
 service EngineService {
   rpc Run (RunRequest) returns (RunResponse) {}
   rpc Resume (ResumeRequest) returns (google.protobuf.Empty) {}
+  rpc Revert (ResumeRequest) returns (google.protobuf.Empty) {}
   rpc Fail (FailRequest) returns (google.protobuf.Empty) {}
 }
 

@@ -22,6 +22,7 @@ service FlowTaskService {
   rpc Query (api.QueryRequest) returns (api.Response) {}
   rpc BatchCreate (api.CreateRequest) returns (api.Response) {}
   rpc Update (api.UpdateRequest) returns (api.Response) {}
+  rpc RevertCreate (api.CreateRequest) returns (api.Response) {}
   rpc Delete (api.GetOrDeleteRequest) returns (api.Response) {}
   rpc Replace (api.UpdateRequest) returns (api.Response) {}
   rpc UpdateFilter (api.UpdateFilter) returns (api.Response) {}

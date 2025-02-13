@@ -26,6 +26,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	EngineService_Run_FullMethodName    = "/engine.EngineService/Run"
 	EngineService_Resume_FullMethodName = "/engine.EngineService/Resume"
+	EngineService_Revert_FullMethodName = "/engine.EngineService/Revert"
 	EngineService_Fail_FullMethodName   = "/engine.EngineService/Fail"
 )
 
@@ -35,6 +36,7 @@ const (
 type EngineServiceClient interface {
 	Run(ctx context.Context, in *RunRequest, opts ...grpc.CallOption) (*RunResponse, error)
 	Resume(ctx context.Context, in *ResumeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Revert(ctx context.Context, in *ResumeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Fail(ctx context.Context, in *FailRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -64,6 +66,15 @@ func (c *engineServiceClient) Resume(ctx context.Context, in *ResumeRequest, opt
 	return out, nil
 }
 
+func (c *engineServiceClient) Revert(ctx context.Context, in *ResumeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, EngineService_Revert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *engineServiceClient) Fail(ctx context.Context, in *FailRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, EngineService_Fail_FullMethodName, in, out, opts...)
@@ -79,6 +90,7 @@ func (c *engineServiceClient) Fail(ctx context.Context, in *FailRequest, opts ..
 type EngineServiceServer interface {
 	Run(context.Context, *RunRequest) (*RunResponse, error)
 	Resume(context.Context, *ResumeRequest) (*emptypb.Empty, error)
+	Revert(context.Context, *ResumeRequest) (*emptypb.Empty, error)
 	Fail(context.Context, *FailRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedEngineServiceServer()
 }
@@ -92,6 +104,9 @@ func (UnimplementedEngineServiceServer) Run(context.Context, *RunRequest) (*RunR
 }
 func (UnimplementedEngineServiceServer) Resume(context.Context, *ResumeRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Resume not implemented")
+}
+func (UnimplementedEngineServiceServer) Revert(context.Context, *ResumeRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Revert not implemented")
 }
 func (UnimplementedEngineServiceServer) Fail(context.Context, *FailRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Fail not implemented")
@@ -145,6 +160,24 @@ func _EngineService_Resume_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EngineService_Revert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResumeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineServiceServer).Revert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineService_Revert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineServiceServer).Revert(ctx, req.(*ResumeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _EngineService_Fail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FailRequest)
 	if err := dec(in); err != nil {
@@ -177,6 +210,10 @@ var EngineService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Resume",
 			Handler:    _EngineService_Resume_Handler,
+		},
+		{
+			MethodName: "Revert",
+			Handler:    _EngineService_Revert_Handler,
 		},
 		{
 			MethodName: "Fail",
