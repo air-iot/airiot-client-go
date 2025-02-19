@@ -23,23 +23,24 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DriverService_HealthCheck_FullMethodName     = "/driver.DriverService/HealthCheck"
-	DriverService_Event_FullMethodName           = "/driver.DriverService/Event"
-	DriverService_CommandLog_FullMethodName      = "/driver.DriverService/CommandLog"
-	DriverService_UpdateTableData_FullMethodName = "/driver.DriverService/UpdateTableData"
-	DriverService_FindTableData_FullMethodName   = "/driver.DriverService/FindTableData"
-	DriverService_SchemaStream_FullMethodName    = "/driver.DriverService/SchemaStream"
-	DriverService_StartStream_FullMethodName     = "/driver.DriverService/StartStream"
-	DriverService_RunStream_FullMethodName       = "/driver.DriverService/RunStream"
-	DriverService_WriteTagStream_FullMethodName  = "/driver.DriverService/WriteTagStream"
-	DriverService_BatchRunStream_FullMethodName  = "/driver.DriverService/BatchRunStream"
-	DriverService_DebugStream_FullMethodName     = "/driver.DriverService/DebugStream"
-	DriverService_HttpProxyStream_FullMethodName = "/driver.DriverService/HttpProxyStream"
-	DriverService_BatchCommand_FullMethodName    = "/driver.DriverService/BatchCommand"
-	DriverService_ChangeCommand_FullMethodName   = "/driver.DriverService/ChangeCommand"
-	DriverService_HttpProxy_FullMethodName       = "/driver.DriverService/HttpProxy"
-	DriverService_WriteTag_FullMethodName        = "/driver.DriverService/WriteTag"
-	DriverService_BatchWriteTag_FullMethodName   = "/driver.DriverService/BatchWriteTag"
+	DriverService_HealthCheck_FullMethodName        = "/driver.DriverService/HealthCheck"
+	DriverService_Event_FullMethodName              = "/driver.DriverService/Event"
+	DriverService_CommandLog_FullMethodName         = "/driver.DriverService/CommandLog"
+	DriverService_UpdateTableData_FullMethodName    = "/driver.DriverService/UpdateTableData"
+	DriverService_FindTableData_FullMethodName      = "/driver.DriverService/FindTableData"
+	DriverService_SchemaStream_FullMethodName       = "/driver.DriverService/SchemaStream"
+	DriverService_StartStream_FullMethodName        = "/driver.DriverService/StartStream"
+	DriverService_RunStream_FullMethodName          = "/driver.DriverService/RunStream"
+	DriverService_WriteTagStream_FullMethodName     = "/driver.DriverService/WriteTagStream"
+	DriverService_BatchRunStream_FullMethodName     = "/driver.DriverService/BatchRunStream"
+	DriverService_DebugStream_FullMethodName        = "/driver.DriverService/DebugStream"
+	DriverService_HttpProxyStream_FullMethodName    = "/driver.DriverService/HttpProxyStream"
+	DriverService_ConfigUpdateStream_FullMethodName = "/driver.DriverService/ConfigUpdateStream"
+	DriverService_BatchCommand_FullMethodName       = "/driver.DriverService/BatchCommand"
+	DriverService_ChangeCommand_FullMethodName      = "/driver.DriverService/ChangeCommand"
+	DriverService_HttpProxy_FullMethodName          = "/driver.DriverService/HttpProxy"
+	DriverService_WriteTag_FullMethodName           = "/driver.DriverService/WriteTag"
+	DriverService_BatchWriteTag_FullMethodName      = "/driver.DriverService/BatchWriteTag"
 )
 
 // DriverServiceClient is the client API for DriverService service.
@@ -59,6 +60,7 @@ type DriverServiceClient interface {
 	BatchRunStream(ctx context.Context, opts ...grpc.CallOption) (DriverService_BatchRunStreamClient, error)
 	DebugStream(ctx context.Context, opts ...grpc.CallOption) (DriverService_DebugStreamClient, error)
 	HttpProxyStream(ctx context.Context, opts ...grpc.CallOption) (DriverService_HttpProxyStreamClient, error)
+	ConfigUpdateStream(ctx context.Context, opts ...grpc.CallOption) (DriverService_ConfigUpdateStreamClient, error)
 	// 平台用
 	BatchCommand(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error)
 	ChangeCommand(ctx context.Context, in *api.UpdateRequest, opts ...grpc.CallOption) (*api.Response, error)
@@ -337,6 +339,37 @@ func (x *driverServiceHttpProxyStreamClient) Recv() (*HttpProxyRequest, error) {
 	return m, nil
 }
 
+func (c *driverServiceClient) ConfigUpdateStream(ctx context.Context, opts ...grpc.CallOption) (DriverService_ConfigUpdateStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &DriverService_ServiceDesc.Streams[7], DriverService_ConfigUpdateStream_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &driverServiceConfigUpdateStreamClient{stream}
+	return x, nil
+}
+
+type DriverService_ConfigUpdateStreamClient interface {
+	Send(*ConfigUpdateResponse) error
+	Recv() (*ConfigUpdateRequest, error)
+	grpc.ClientStream
+}
+
+type driverServiceConfigUpdateStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *driverServiceConfigUpdateStreamClient) Send(m *ConfigUpdateResponse) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *driverServiceConfigUpdateStreamClient) Recv() (*ConfigUpdateRequest, error) {
+	m := new(ConfigUpdateRequest)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *driverServiceClient) BatchCommand(ctx context.Context, in *api.CreateRequest, opts ...grpc.CallOption) (*api.Response, error) {
 	out := new(api.Response)
 	err := c.cc.Invoke(ctx, DriverService_BatchCommand_FullMethodName, in, out, opts...)
@@ -399,6 +432,7 @@ type DriverServiceServer interface {
 	BatchRunStream(DriverService_BatchRunStreamServer) error
 	DebugStream(DriverService_DebugStreamServer) error
 	HttpProxyStream(DriverService_HttpProxyStreamServer) error
+	ConfigUpdateStream(DriverService_ConfigUpdateStreamServer) error
 	// 平台用
 	BatchCommand(context.Context, *api.CreateRequest) (*api.Response, error)
 	ChangeCommand(context.Context, *api.UpdateRequest) (*api.Response, error)
@@ -447,6 +481,9 @@ func (UnimplementedDriverServiceServer) DebugStream(DriverService_DebugStreamSer
 }
 func (UnimplementedDriverServiceServer) HttpProxyStream(DriverService_HttpProxyStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method HttpProxyStream not implemented")
+}
+func (UnimplementedDriverServiceServer) ConfigUpdateStream(DriverService_ConfigUpdateStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ConfigUpdateStream not implemented")
 }
 func (UnimplementedDriverServiceServer) BatchCommand(context.Context, *api.CreateRequest) (*api.Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchCommand not implemented")
@@ -748,6 +785,32 @@ func (x *driverServiceHttpProxyStreamServer) Recv() (*HttpProxyResult, error) {
 	return m, nil
 }
 
+func _DriverService_ConfigUpdateStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DriverServiceServer).ConfigUpdateStream(&driverServiceConfigUpdateStreamServer{stream})
+}
+
+type DriverService_ConfigUpdateStreamServer interface {
+	Send(*ConfigUpdateRequest) error
+	Recv() (*ConfigUpdateResponse, error)
+	grpc.ServerStream
+}
+
+type driverServiceConfigUpdateStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *driverServiceConfigUpdateStreamServer) Send(m *ConfigUpdateRequest) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *driverServiceConfigUpdateStreamServer) Recv() (*ConfigUpdateResponse, error) {
+	m := new(ConfigUpdateResponse)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func _DriverService_BatchCommand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.CreateRequest)
 	if err := dec(in); err != nil {
@@ -926,6 +989,12 @@ var DriverService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "HttpProxyStream",
 			Handler:       _DriverService_HttpProxyStream_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "ConfigUpdateStream",
+			Handler:       _DriverService_ConfigUpdateStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

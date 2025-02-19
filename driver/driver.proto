@@ -28,6 +28,7 @@ service DriverService {
   rpc BatchRunStream (stream BatchRunResult) returns (stream BatchRunRequest) {}
   rpc DebugStream (stream Debug) returns (stream Debug) {}
   rpc HttpProxyStream (stream HttpProxyResult) returns (stream HttpProxyRequest) {}
+  rpc ConfigUpdateStream (stream ConfigUpdateResponse) returns (stream ConfigUpdateRequest) {}
   //  rpc UpdateDeviceStream (stream UpdateDeviceResult) returns (stream UpdateDeviceRequest) {}
 
   // 平台用
@@ -223,4 +224,36 @@ message ClientHttpProxyRequest {
 message RequestCommand {
   string tableId = 1;
   string tableDataId = 2;
+}
+
+message ConfigUpdateRequest {
+  string request = 1;
+  enum OpsType {
+    ADD_DEVICE = 0;
+    DEL_DEVICE = 1;
+  }
+
+  OpsType opsType = 2;
+
+  oneof data {
+    AddDeviceData add_device_data = 3;
+    DelDeviceData del_device_data = 4;
+  }
+
+  message AddDeviceData {
+    string tableId = 1;
+    bytes tableData = 2; // 字节数组
+  }
+
+  message DelDeviceData {
+    string tableId = 1;
+    string tableDataId = 2;
+  }
+}
+
+message ConfigUpdateResponse {
+  string request = 1;
+  bool status = 2;
+  string info = 3;
+  string detail = 4;
 }
