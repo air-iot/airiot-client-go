@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"dario.cat/mergo"
+	"github.com/air-iot/api-client-go/v4/ai"
 	"github.com/air-iot/api-client-go/v4/algorithm"
 	"github.com/air-iot/api-client-go/v4/api"
 	"github.com/air-iot/api-client-go/v4/auth"
@@ -54,6 +55,7 @@ type Client struct {
 	JsServerClient      *jsserver.Client
 	SyncClient          *sync.Client
 	ComputeRecordClient *computerecord.Client
+	AIClient            *ai.Client
 	Service             *Service
 }
 
@@ -171,6 +173,11 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	aiClient, cleanAI, err := ai.NewClient(cfg, r, cred, httpCred)
+	if err != nil {
+		return nil, nil, err
+	}
 	a := &Client{
 		Config:              cfg,
 		RegistryClient:      NewKartosRegistryClient(cli),
@@ -189,6 +196,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 		JsServerClient:      jsServerClient,
 		SyncClient:          syncClient,
 		ComputeRecordClient: computeRecordClient,
+		AIClient:            aiClient,
 	}
 	a.Service = newService(a)
 	return a, func() {
@@ -206,6 +214,7 @@ func NewClient(cli *clientv3.Client, cfg config.Config) (*Client, func(), error)
 		cleanJsServer()
 		cleanSync()
 		cleanComputeRecord()
+		cleanAI()
 	}, nil
 }
 
